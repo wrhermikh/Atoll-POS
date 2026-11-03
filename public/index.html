@@ -1631,16 +1631,18 @@ function nextSeq(){
 }
 
 /* ---------- loading data ---------- */
+const slugN=x=>String(x||'').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g,'');
+const staffEmail=(nm,shop)=>slugN(nm)+'.'+slugN(shop)+'@staff.example.com';
 async function pullMeta(){
   const [a,b,c]=await Promise.all([
     sbc.from('shops').select('*').eq('id',cl.shop).single(),
     sbc.from('members').select('*').eq('shop_id',cl.shop).order('created_at'),
     sbc.from('plan_requests').select('*').eq('shop_id',cl.shop).order('created_at',{ascending:false})]);
   if(a.error)throw a.error;if(b.error)throw b.error;
-  const sh=a.data;
+  const sh=a.data;cl.slug=sh.slug||'';
   Object.assign(S,sh.settings||{});
   S.shop=sh.name;S.tin=sh.gst_tin||'';S.gst=+sh.gst_rate;S.plan=sh.plan;S.status=sh.status;S.renew=Date.parse(sh.renews_at);
-  S.users=b.data.map(r=>({id:r.id,uid:r.user_id,name:r.name,role:r.role,perms:r.perms||[],email:r.email||'',pin:''}));
+  S.users=b.data.map(r=>({id:r.id,uid:r.user_id,name:r.name,role:r.role,perms:r.perms||[],email:/@staff\.example\.com$/.test(r.email||'')?'':(r.email||''),pin:''}));
   S.reqs=((c&&c.data)||[]).map(r=>({id:r.id,at:Date.parse(r.created_at),plan:r.plan,ref:r.ref,status:r.status}));
   cl.snap.shop=cj(shopPayload());
   me=S.users.find(u=>u.uid===cl.uid)||null;
@@ -1773,6 +1775,7 @@ async function cloudEnter(user){
   try{
     const ad=await sbc.rpc('am_i_admin');
     if(ad.data===true){cl.admin=true;adm=true;cl.loading=false;render();return}
+    try{await sbc.rpc('claim_invites')}catch(x){}
     const mem=await sbc.from('members').select('shop_id,role').eq('user_id',user.id);
     if(mem.error)throw mem.error;
     if(!mem.data.length){
@@ -1842,18 +1845,19 @@ function cloudLogin(){
   const gbtn=`<p class='sub' style='text-align:center;margin:12px 0 4px'>or</p><button class='ghost' style='width:100%;min-height:48px' data-cl-google>Continue with Google</button>`;
   const back=`<p class='sub' style='text-align:center'>${link('home','Back')}</p>`;
   let h;
-  if(m0==='home')h=landing(`<button class='go' data-cl-mode='up'>Sign up</button><button class='ghost' style='width:100%;margin-top:10px;min-height:48px' data-cl-mode='in'>Log in</button>`,er);
+  if(m0==='home')h=landing(`<button class='go' data-cl-mode='up'>Sign up</button><button class='ghost' style='width:100%;margin-top:10px;min-height:48px' data-cl-mode='in'>Log in</button><p class='sub' style='text-align:center;margin:14px 0 0'>${link('staff','I am staff: sign in with my shop name')}</p>`,er);
   else if(m0==='up')h=`<h1>Create your <i>shop.</i></h1><p class='sub'>The owner signs up with an email address. You will confirm it from your inbox.</p><div class='card' data-clform>${f('cl-sn','Shop name','text','Atoll Mart')}${f('cl-on','Your name','text','Owner name')}${f('cl-e','Email','email','you@example.com','autocomplete=email inputmode=email')}${f('cl-p','Password (8 or more characters)','password','','autocomplete=new-password')}<p class='sub' style='font-size:12.5px;margin:10px 0 0'>You will use this password to log in and to confirm important changes such as refunds and removing users. Product names, barcodes and categories you add go into our shared product catalogue (never prices, costs or stock).</p>${er}<button class='go' data-cl-up>Create account</button>${gbtn}</div><p class='sub' style='text-align:center'>${link('in','I already have an account')} \u00b7 ${link('home','Back')}</p>`;
+  else if(m0==='staff')h=`<h1>Staff <i>sign in.</i></h1><p class='sub'>Use the shop name, your name and the password your manager gave you.</p><div class='card' data-clform>${f('cl-sh','Shop name','text','e.g. Atoll Mart','autocomplete=off')}${f('cl-sname','Your name','text','Your name','autocomplete=username')}${f('cl-p','Password','password','','autocomplete=current-password')}<label class='chk' style='border:0;margin-top:10px'><input type='checkbox' id='cl-shared' ${isShared()?'checked':''}>This is a shared computer. Sign me out when I close the tab, and after 20 idle minutes.</label>${er}<button class='go' data-cl-staff>Sign in</button></div><p class='sub' style='text-align:center'>${link('in','Shop owner log in')} \u00b7 ${link('home','Back')}</p>`;
   else if(m0==='check')h=`<h1>Check your <i>email.</i></h1><div class='card'><p class='sub' style='margin:0'>We sent a confirmation link to your email address. Open it, then sign in here and your shop will be created.</p></div><p class='sub' style='text-align:center'>${link('in','Back to sign in')}</p>`;
   else if(m0==='forgot')h=`<h1>Reset your <i>password.</i></h1><div class='card' data-clform>${f('cl-e','Email','email','you@example.com','autocomplete=email')}${er}<button class='go' data-cl-forgot>Send reset link</button></div><p class='sub' style='text-align:center'>${link('in','Back to sign in')}</p>`;
   else if(m0==='newpw')h=`<h1>Choose a new <i>password.</i></h1><div class='card' data-clform>${f('cl-p','New password (8 or more characters)','password','','autocomplete=new-password')}${er}<button class='go' data-cl-newpw>Save password</button></div>`;
   else if(m0==='newshop')h=`<h1>Set up your <i>shop.</i></h1><p class='sub'>${cl.needPw?'This account is not part of a shop yet.':'Each shop has its own staff, data and subscription.'}</p><div class='card' data-clform>${f('cl-sn','Shop name','text','Atoll Mart')}${f('cl-on','Your name','text','Owner name')}${cl.needPw?f('cl-p','Create a password (8 or more characters)','password','','autocomplete=new-password')+`<p class='sub' style='font-size:12.5px;margin:6px 0 0'>You will use it to confirm important changes such as refunds and removing users.</p>`:''}${er}<button class='go' data-cl-newshop>Create shop</button></div><p class='sub' style='text-align:center'>${cl.shops&&cl.shops.length?link('pick','Back')+' · ':''}<button class='lnk' data-cl-out>Sign out</button></p>`;
   else if(m0==='pick')h=`<h1>Choose a <i>shop.</i></h1><p class='sub'>Signed in as ${esc(cl.email)}. Each shop is separate: its own data, staff and plan.</p>${er}<div class='card'>${(cl.shops||[]).map(s=>`<button class='item' style='width:100%' data-cl-shop='${s.id}'><div><b>${esc(s.name)}</b><small>${s.role==='owner'?'Owner':s.role==='full'?'Full access':'Cashier'}</small></div><span>Open</span></button>`).join('')}</div><button class='ghost' style='width:100%;min-height:48px' data-cl-mode='newshop'>Create another shop</button><p class='sub' style='text-align:center'><button class='lnk' data-cl-out>Sign out</button></p>`;
-  else h=`<h1>Log <i>in.</i></h1><p class='sub'>Use your email and password.</p><div class='card' data-clform>${f('cl-e','Email','email','you@example.com','autocomplete=email inputmode=email')}${f('cl-p','Password','password','','autocomplete=current-password')}<label class='chk' style='border:0;margin-top:10px'><input type='checkbox' id='cl-shared' ${isShared()?'checked':''}>This is a shared computer. Sign me out when I close the tab, and after 20 idle minutes.</label>${er}<button class='go' data-cl-in>Log in</button>${gbtn}</div><p class='sub' style='text-align:center'>${link('up','Sign up')} · ${link('forgot','Forgot password')} · ${link('home','Back')}</p>`;
+  else h=`<h1>Log <i>in.</i></h1><p class='sub'>Use your email and password.</p><div class='card' data-clform>${f('cl-e','Email','email','you@example.com','autocomplete=email inputmode=email')}${f('cl-p','Password','password','','autocomplete=current-password')}<label class='chk' style='border:0;margin-top:10px'><input type='checkbox' id='cl-shared' ${isShared()?'checked':''}>This is a shared computer. Sign me out when I close the tab, and after 20 idle minutes.</label>${er}<button class='go' data-cl-in>Log in</button>${gbtn}</div><p class='sub' style='text-align:center'>${link('up','Sign up')} · ${link('forgot','Forgot password')} · ${link('staff','Staff sign in')} · ${link('home','Back')}</p>`;
   $('#app').innerHTML=h;
 }
 const gv=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
-function clErr(t){cl.vals={'cl-e':gv('cl-e'),'cl-sn':gv('cl-sn'),'cl-on':gv('cl-on')};cl.err=t;cloudLogin()}
+function clErr(t){cl.vals={'cl-e':gv('cl-e'),'cl-sn':gv('cl-sn'),'cl-on':gv('cl-on'),'cl-sh':gv('cl-sh'),'cl-sname':gv('cl-sname')};cl.err=t;cloudLogin()}
 async function clBusy(btn,fn){if(btn)btn.disabled=true;try{await fn()}catch(e){clErr(nice(errMsg(e)))}finally{if(btn)btn.disabled=false}}
 
 document.addEventListener('keydown',e=>{if(!CLOUD||e.key!=='Enter'||!e.target.closest||!e.target.closest('[data-clform]'))return;const b=document.querySelector('[data-clform] .go');if(b)b.click()});
@@ -1867,6 +1871,11 @@ document.addEventListener('click',e=>{
     const em=gv('cl-e').toLowerCase(),pw=document.getElementById('cl-p').value;if(!em||!pw)return clErr('Enter your email and password.');
     const sh=!!(document.getElementById('cl-shared')||{}).checked;if(sh!==isShared()){try{localStorage.setItem('atoll_shared',sh?'1':'0')}catch(x){}sbc=mkClient(sh)}
     const r=await sbc.auth.signInWithPassword({email:em,password:pw});if(r.error)return clErr(nice(r.error.message));
+    await cloudEnter(r.data.user)})}
+  else if('clStaff' in d){clBusy(b,async()=>{
+    const sh0=gv('cl-sh'),nm=gv('cl-sname'),pw=document.getElementById('cl-p').value;if(!slugN(sh0)||!slugN(nm)||!pw)return clErr('Enter the shop name, your name and your password.');
+    const sh=!!(document.getElementById('cl-shared')||{}).checked;if(sh!==isShared()){try{localStorage.setItem('atoll_shared',sh?'1':'0')}catch(x){}sbc=mkClient(sh)}
+    const r=await sbc.auth.signInWithPassword({email:staffEmail(nm,sh0),password:pw});if(r.error)return clErr(/invalid login/i.test(r.error.message)?'Wrong shop name, name or password.':nice(r.error.message));
     await cloudEnter(r.data.user)})}
   else if('clGoogle' in d){clBusy(b,async()=>{const r=await sbc.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin}});if(r.error)clErr(r.error.message)})}
   else if('clUp' in d){clBusy(b,async()=>{
@@ -1923,15 +1932,15 @@ document.addEventListener('click',async e=>{
   if('reset' in d){stop();toast('This option is only for the local demo.',1);return}
   if('paycard' in d){stop();return}
   if('clAdduser' in d){stop();
-    const n=gv('un'),em=gv('cl-ue').toLowerCase(),pw=document.getElementById('cl-up').value,er=$('#ue');
+    const n=gv('un'),pw=document.getElementById('cl-up').value,er=$('#ue');
     if(!n)return $('#un').focus();
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){er.textContent='Enter a valid email address.';return}
+    if(!slugN(n)){er.textContent='Use letters or numbers in the name.';return}
     if(pw.length<8){er.textContent='The password needs at least 8 characters.';return}
     b.disabled=true;er.textContent='';
     try{
-      const r=await fnInvoke('create-staff',{body:{shop_id:cl.shop,email:em,password:pw,name:n,role:$('#ur').value,perms:CASHIER}});
+      const r=await fnInvoke('create-staff',{body:{shop_id:cl.shop,password:pw,name:n,role:$('#ur').value,perms:CASHIER}});
       if(r.error){er.textContent=await fnError(r.error);b.disabled=false;return}
-      logit(me.name,'Added user '+n);await pullMeta();save();team();toast('User added. Share their email and password with them.');
+      logit(me.name,'Added user '+n);await pullMeta();save();team();toast('User added. They sign in with the shop name, their name and this password.');
     }catch(x){er.textContent=errMsg(x);b.disabled=false}
     return}
   if(d.del){stop();const du=S.users.find(u=>u.id==d.del);
@@ -2409,6 +2418,42 @@ async function fnInvoke(name,opts){
   let t='';try{const r=await sbc.auth.getSession();t=r&&r.data&&r.data.session?r.data.session.access_token:''}catch(e){}
   if(!t)return {error:{message:'Your sign-in has expired. Sign out, sign in again, then retry.'}};
   return sbc.functions.invoke(name,{...opts,body:{...opts.body,token:t},headers:{Authorization:'Bearer '+t}});
+}
+
+/* ---- Invite staff by email (they sign in with Google or their own password) ---- */
+window.__inv=[];window.__invShop=null;
+async function loadInv(){
+  try{const r=await sbc.from('invites').select('*').eq('shop_id',cl.shop).order('created_at');
+    window.__inv=r.error?[]:r.data||[]}catch(e){window.__inv=[]}
+  if(tab==='team'&&typeof team==='function')team();
+}
+function cloudAddUser(b){
+  if(window.__invShop!==cl.shop){window.__invShop=cl.shop;window.__inv=[];loadInv()}
+  const inv=window.__inv||[];
+  return `<div class='card'><div class='hd'>Add user</div><p class='sub' style='font-size:13px;margin:0 0 8px'>Enter their name and email. Leave the password empty to invite them: they sign in with <b>Google</b> (or sign up) using that same email and join this shop automatically. Or set a password yourself.</p><div class='add'><input id='un' placeholder='Name'><input id='cl-ue' type='email' placeholder='Email'><input id='cl-up' type='password' placeholder='Password (optional, 8+ characters)' autocomplete='new-password'><select id='ur'><option value='cashier'>Cashier</option><option value='full'>Full access</option></select></div><p id='ue' class='out' style='margin:8px 0 0'></p><p class='sub' style='font-size:13px;margin:6px 0 0'>${S.users.length>=b.p.inc?'Adding a user costs '+m(b.p.x)+' per month.':(b.p.inc-S.users.length)+' included seat left.'}</p><button class='go' data-cl-adduser>Add user</button></div>${inv.length?`<div class='card'><div class='hd'>Waiting to join</div>${inv.map(x=>`<div class='item'><div>${esc(x.name)} <span class='tag'>${x.role==='full'?'Full access':'Cashier'}</span><small>${esc(x.email)} · will join when they sign in with this email</small></div><button class='ghost danger' data-invrm='${x.id}'>Cancel</button></div>`).join('')}</div>`:''}`;
+}
+document.addEventListener('click',async e=>{
+  if(!CLOUD)return;const b=e.target.closest&&e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.invrm){e.stopImmediatePropagation();e.preventDefault();
+    const r=await sbc.rpc('revoke_invite',{p_id:d.invrm});if(r.error){toast(errMsg(r.error),1);return}
+    logit(me.name,'Cancelled an invitation');save();await loadInv();return}
+  if('clAdduser' in d){
+    return; // email invitations are no longer offered; staff use name + password
+    e.stopImmediatePropagation();e.preventDefault();
+    const n=gv('un'),em=gv('cl-ue').toLowerCase(),er=$('#ue');
+    if(!n)return $('#un').focus();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){er.textContent='Enter a valid email address.';return}
+    b.disabled=true;er.textContent='';
+    const r=await sbc.rpc('invite_member',{p_shop:cl.shop,p_email:em,p_name:n,p_role:$('#ur').value,p_perms:CASHIER});
+    if(r.error){er.textContent=errMsg(r.error);b.disabled=false;return}
+    logit(me.name,'Invited '+n);save();await loadInv();toast('Invitation saved. Tell '+n+' to sign in with Google using '+em+'.');
+  }
+},true);
+
+/* ---- Add user: name + password only; staff sign in with shop name, name, password ---- */
+function cloudAddUser(b){
+  const slug=cl.slug||slugN(S.shop),nm=slugN(S.shop)===slug?S.shop:slug;
+  return `<div class='card'><div class='hd'>Add user</div><p class='sub' style='font-size:13px;margin:0 0 8px'>Give each person a name and a password. On the sign-in page they choose <b>Staff sign in</b> and enter the shop name <b>${esc(nm)}</b>, their name and their password.</p><div class='add'><input id='un' placeholder='Name (for example Aisha)' autocomplete='off'><input id='cl-up' type='password' placeholder='Password (8+ characters)' autocomplete='new-password'><select id='ur'><option value='cashier'>Cashier</option><option value='full'>Full access</option></select></div><p id='ue' class='out' style='margin:8px 0 0'></p><p class='sub' style='font-size:13px;margin:6px 0 0'>${S.users.length>=b.p.inc?'Adding a user costs '+m(b.p.x)+' per month.':(b.p.inc-S.users.length)+' included seat left.'}</p><button class='go' data-cl-adduser>Add user</button></div>`;
 }
 
 if(CLOUD)cloudBoot();else render();
