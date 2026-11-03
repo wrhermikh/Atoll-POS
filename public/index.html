@@ -254,6 +254,11 @@ body{padding-left:0!important}
 .tb [data-menu]{display:inline-flex!important}
 .cbar{left:24px;right:24px}
 }
+/* v7: use the full desktop width; tidy the menu button and dropdown arrows */
+@media(min-width:900px){main,main[data-p]{max-width:min(1240px,calc(100vw - 64px))}.tb,.tb[data-w='n']{max-width:min(1240px,calc(100vw - 64px))}}
+.tb [data-menu]{width:44px;height:44px;min-height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;flex:none}
+.tb [data-menu] svg{width:22px;height:22px}
+select{-webkit-appearance:none;appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3a8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:16px}
 </style>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -2364,6 +2369,41 @@ function actPage(){
 }
 document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='alq'){alq=t.value.trim();const p=t.selectionStart;actPage();const n=$('#alq');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(x){}}}});
 document.addEventListener('change',e=>{const t=e.target;if(t&&t.id==='alu'){alu=t.value;actPage()}});
+
+/* ---- Show password + Confirm password on sign-up / password change ---- */
+(function(){
+  const NEWP=['cl-p','sp','cp1'],SHOW=['cl-p','sp','lp','cp0','cp1','rpin'];
+  function enhance(root){
+    if(!root)return;
+    NEWP.concat(SHOW).forEach(id=>{
+      const el=root.querySelector('#'+id);if(!el||el.dataset.pwx)return;el.dataset.pwx='1';
+      const isNew=NEWP.includes(id)&&/new-password/.test(el.getAttribute('autocomplete')||'');
+      let last=el;
+      if(isNew){
+        const l=document.createElement('label');l.className='pwx';l.textContent='Confirm password';
+        const c=document.createElement('input');c.type='password';c.id='pw2';c.className='pwx';c.placeholder='Type it again';c.autocomplete='new-password';
+        el.after(l);l.after(c);last=c;
+      }
+      const w=document.createElement('label');w.className='chk pwx';w.style.cssText='border:0;margin-top:8px;padding:6px 0';
+      w.innerHTML="<input type='checkbox' data-showpw> Show password";
+      last.after(w);
+    });
+  }
+  const run=()=>{enhance(document.getElementById('app'));enhance(document.getElementById('m'))};
+  new MutationObserver(run).observe(document.body,{childList:true,subtree:true});run();
+  document.addEventListener('change',e=>{
+    const t=e.target;if(!t||!t.hasAttribute||!t.hasAttribute('data-showpw'))return;
+    const box=t.closest('.card,.modal')||document;
+    box.querySelectorAll('input.pwx[type=password],input[data-pwx][type=password],input[data-pwx][type=text],input#pw2').forEach(i=>{if(i.type==='password'||i.type==='text')i.type=t.checked?'text':'password'});
+  },true);
+  document.addEventListener('click',e=>{
+    const b=e.target.closest&&e.target.closest('button');if(!b)return;
+    if(!(b.hasAttribute('data-cl-up')||b.hasAttribute('data-cl-newpw')||b.hasAttribute('data-cl-newshop')||b.hasAttribute('data-signup')||b.hasAttribute('data-cl-chpw2')))return;
+    const c=document.getElementById('pw2');if(!c)return;
+    const p=document.getElementById('cl-p')||document.getElementById('sp')||document.getElementById('cp1');
+    if(p&&p.value!==c.value){e.stopImmediatePropagation();e.preventDefault();toast('The two passwords do not match.',1);c.focus()}
+  },true);
+})();
 
 if(CLOUD)cloudBoot();else render();
 </script>
