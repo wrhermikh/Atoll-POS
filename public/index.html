@@ -1929,7 +1929,7 @@ document.addEventListener('click',async e=>{
     if(pw.length<8){er.textContent='The password needs at least 8 characters.';return}
     b.disabled=true;er.textContent='';
     try{
-      const r=await sbc.functions.invoke('create-staff',{body:{shop_id:cl.shop,email:em,password:pw,name:n,role:$('#ur').value,perms:CASHIER}});
+      const r=await fnInvoke('create-staff',{body:{shop_id:cl.shop,email:em,password:pw,name:n,role:$('#ur').value,perms:CASHIER}});
       if(r.error){er.textContent=await fnError(r.error);b.disabled=false;return}
       logit(me.name,'Added user '+n);await pullMeta();save();team();toast('User added. Share their email and password with them.');
     }catch(x){er.textContent=errMsg(x);b.disabled=false}
@@ -1945,7 +1945,7 @@ document.addEventListener('click',async e=>{
       try{
         if(u.role==='owner'){if(np){const r=await sbc.auth.updateUser({password:np});if(r.error)throw r.error}}
         else{const r=await sbc.from('members').update({role:nr,perms:nr==='cashier'?pm:[]}).eq('id',u.id);if(r.error)throw r.error
-          if(np){const f=await sbc.functions.invoke('set-staff-password',{body:{shop_id:cl.shop,member_id:u.id,password:np}});if(f.error)throw new Error(await fnError(f.error))}}
+          if(np){const f=await fnInvoke('set-staff-password',{body:{shop_id:cl.shop,member_id:u.id,password:np}});if(f.error)throw new Error(await fnError(f.error))}}
         logit(me.name,'Changed access for '+u.name);await pullMeta();save();$('#m').innerHTML='';render();
       }catch(x){toast(errMsg(x),1)}});return}
   if(d.reqplan){stop();const[k,ref]=d.reqplan.split('|');
@@ -2404,6 +2404,12 @@ document.addEventListener('change',e=>{const t=e.target;if(t&&t.id==='alu'){alu=
     if(p&&p.value!==c.value){e.stopImmediatePropagation();e.preventDefault();toast('The two passwords do not match.',1);c.focus()}
   },true);
 })();
+
+async function fnInvoke(name,opts){
+  let t='';try{const r=await sbc.auth.getSession();t=r&&r.data&&r.data.session?r.data.session.access_token:''}catch(e){}
+  if(!t)return {error:{message:'Your sign-in has expired. Sign out, sign in again, then retry.'}};
+  return sbc.functions.invoke(name,{...opts,body:{...opts.body,token:t},headers:{Authorization:'Bearer '+t}});
+}
 
 if(CLOUD)cloudBoot();else render();
 </script>
