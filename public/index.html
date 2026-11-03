@@ -279,13 +279,13 @@ let me=null;
 const can=k=>!!me&&(me.role!=='cashier'||me.perms.includes(k));
 const mgr=()=>!!me&&me.role!=='cashier';
 const bill=()=>{const p=PLANS[S.plan],ex=Math.max(0,S.users.length-p.inc);return{p,ex,tot:p.p+ex*p.x}};
-const allowed=t=>({ov:1,cust:can('sell'),pr:can('prodview'),pos:can('sell'),inv:can('invview'),cb:can('cbview'),team:mgr(),set:mgr(),biz:can('reports')||can('purchase')||can('register')||can('prodedit')})[t];
+const allowed=t=>({ov:1,cust:can('sell'),pr:can('prodview'),pos:can('sell'),act:mgr(),quot:can('sell'),inv:can('invview'),cb:can('cbview'),team:mgr(),set:mgr(),biz:can('reports')||can('purchase')||can('register')||can('prodedit')})[t];
 const save=()=>{if(CLOUD){cloudSaved();return}try{localStorage.setItem("atoll2",JSON.stringify(S))}catch(e){}};
 const $=s=>document.querySelector(s),m=n=>"Rf "+(+n||0).toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let tab="ov",q="",cart=[],cu="",disc="",reason="",pays=[{m:"Cash",a:""}],newc=false;
 const dlabel=d=>new Date(d).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-const tot=()=>{const sub=cart.reduce((a,l)=>a+lt(l),0),d=Math.min(+disc||0,sub),t=sub-d,k=sub>0?t/sub:0,part=f=>cart.filter(f).reduce((a,l)=>a+lt(l),0)*k,std=part(l=>!l.tx),zero=part(l=>l.tx==='zero'),exempt=part(l=>l.tx==='exempt');return{sub,d,t,std,zero,exempt,gst:std*S.gst/(100+S.gst)}};
+const tot=()=>{const sub=cart.reduce((a,l)=>a+lt(l),0),d=Math.min(+disc||0,sub),t=sub-d,k=sub>0?t/sub:0,part=f=>cart.filter(f).reduce((a,l)=>a+lt(l),0)*k,std=part(l=>!l.tx),zero=part(l=>l.tx==='zero'),exempt=part(l=>l.tx==='exempt');return{sub,d,t,std,zero,exempt,gst:S.gstOn===false?0:std*S.gst/(100+S.gst)}};
 function go(t){tab=t;render();scrollTo(0,0)}
 function render(){
   applyTheme();document.body.classList.toggle('out',!me&&!adm);if(adm){$('#nav').style.display='none';document.body.style.paddingLeft='0';return admin()}document.body.style.paddingLeft='';if(!me){$('#nav').style.display='none';login();if(!CLOUD)$('#app').insertAdjacentHTML('beforeend',"<p class='sub' style='text-align:center'><button class='lnk' data-toadmin>Platform admin</button></p>");return}
@@ -338,7 +338,7 @@ async function camScan(){
 }
 function invDoc(i){
   const ow=S.users.find(u=>u.role==='owner');
-  return `<div class='iv'><div class='ivh'><div><h2>${esc(S.shop||'Atoll Mart')}</h2><div>${ow&&ow.email?esc(ow.email):''}</div><div>${esc(S.addr||'')}</div><div>${S.tin?'GST TIN: '+esc(S.tin):''}</div></div><div style='text-align:right'><h2>TAX INVOICE</h2><div>${i.no}</div><div>${dlabel(i.at)}</div></div></div><div><b>Bill to</b><br>${esc(i.cust)}<br><small>Served by ${esc(i.by||'-')}</small></div><table class='ivt'><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr>${i.items.map(l=>`<tr><td>${esc(l.name)}${l.tx?' (no GST)':''}</td><td>${l.unit==='kg'?(+l.qty.toFixed(3))+' kg':l.qty}</td><td>${l.price.toFixed(2)}${l.unit==='kg'?'/kg':''}</td><td>${(l.qty*l.price).toFixed(2)}</td></tr>`).join('')}</table><div class='ivs'><div class='row'><span>Subtotal</span><span>${i.sub.toFixed(2)}</span></div>${i.disc?`<div class='row'><span>Discount${i.reason?' ('+esc(i.reason)+')':''}</span><span>-${i.disc.toFixed(2)}</span></div>`:''}<div class='row'><span>Total excl. GST</span><span>${(i.total-i.gst).toFixed(2)}</span></div><div class='row'><span>GST ${i.rate}%</span><span>${i.gst.toFixed(2)}</span></div><div class='row' style='font-size:16px'><b>Total incl. GST (MVR)</b><b>${i.total.toFixed(2)}</b></div>${i.pays.map(p=>`<div class='row'><span>Paid by ${p.m}</span><span>${p.a.toFixed(2)}</span></div>`).join('')}${i.due>0.005?`<div class='row'><b>Balance due</b><b>${i.due.toFixed(2)}</b></div>`:''}</div><p style='text-align:center;margin-top:30px'>${esc(S.footer||'Thank you for your business.')}</p></div>`;
+  return `<div class='iv'><div class='ivh'><div>${S.logo?`<img src='${S.logo}' style='max-height:60px;max-width:180px;display:block;margin-bottom:6px'>`:''}<h2>${esc(S.shop||'Atoll Mart')}</h2><div>${S.phone?'Tel: '+esc(S.phone):''}</div><div>${esc(S.addr||'')}</div><div>${S.tin&&i.tax!==false?'GST TIN: '+esc(S.tin):''}</div></div><div style='text-align:right'><h2>${i.tax===false?'INVOICE':'TAX INVOICE'}</h2><div>${i.no}</div><div>${dlabel(i.at)}</div></div></div><div><b>Bill to</b><br>${esc(i.cust)}${S.rcCashier!==false?`<br><small>Served by ${esc(i.by||'-')}</small>`:''}</div><table class='ivt'><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr>${i.items.map(l=>`<tr><td>${esc(l.name)}${l.tx&&i.tax!==false?' (no GST)':''}</td><td>${l.unit==='kg'?(+l.qty.toFixed(3))+' kg':l.qty}</td><td>${l.price.toFixed(2)}${l.unit==='kg'?'/kg':''}</td><td>${(l.qty*l.price).toFixed(2)}</td></tr>`).join('')}</table><div class='ivs'><div class='row'><span>Subtotal</span><span>${i.sub.toFixed(2)}</span></div>${i.disc?`<div class='row'><span>Discount${i.reason?' ('+esc(i.reason)+')':''}</span><span>-${i.disc.toFixed(2)}</span></div>`:''}${i.tax===false?'':`<div class='row'><span>Total excl. GST</span><span>${(i.total-i.gst).toFixed(2)}</span></div><div class='row'><span>GST ${i.rate}%</span><span>${i.gst.toFixed(2)}</span></div>`}<div class='row' style='font-size:16px'><b>${i.tax===false?'Total (MVR)':'Total incl. GST (MVR)'}</b><b>${i.total.toFixed(2)}</b></div>${i.pays.map(p=>`<div class='row'><span>Paid by ${p.m}</span><span>${p.a.toFixed(2)}</span></div>`).join('')}${i.due>0.005?`<div class='row'><b>Balance due</b><b>${i.due.toFixed(2)}</b></div>`:''}${rcBalRow(i)}</div>${S.terms?`<p style='margin-top:18px;font-size:12px;white-space:pre-wrap'><b>Terms and conditions</b><br>${esc(S.terms)}</p>`:''}${S.payqr?`<div style='text-align:center;margin-top:14px'><img src='${S.payqr}' style='width:110px;height:110px'><div style='font-size:12px'>Scan to pay</div></div>`:''}<p style='text-align:center;margin-top:30px'>${esc(S.footer||'Thank you for your business.')}</p></div>`;
 }
 function doPrint(i,fmt){
   if(!i)return;S.pfmt=fmt;save();
@@ -375,7 +375,8 @@ function settsBase(){
   const T={rprinter:'Receipt printer',aprinter:'A4/A5 printer',scanner:'Barcode scanner',drawer:'Cash drawer',terminal:'Card terminal'};
   $('#app').innerHTML=`<div class='top'><div><h1>Settings</h1><p class='sub' style='margin:2px 0 0'>Shop defaults, printing and connected devices.</p></div></div>
   ${CLOUD?accountCard():''}<div class='card'><div class='hd'>Appearance</div><div style='display:flex;justify-content:space-between;align-items:center'><span>Dark mode</span><button class='sw' role='switch' aria-checked='${effTheme()==='dark'}' aria-label='Dark mode' data-th='${effTheme()==='dark'?'light':'dark'}'><i></i></button></div></div>
-  <div class='card'><div class='hd'>Shop details</div><div class='g2'>${f('Shop name',`<input data-sf='shop' value='${esc(S.shop||'')}'>`)}${f('GST TIN',`<input data-sf='tin' value='${esc(S.tin||'')}'>`)}</div><div style='margin-top:12px'>${f('Address',`<input data-sf='addr' value='${esc(S.addr||'')}'>`)}</div><div class='g2' style='margin-top:12px'>${f('GST rate (%)',`<input type='number' min='0' data-sf='gst' value='${S.gst}'>`)}${f('Default payment method',`<select data-sf='defpay'>${['Cash','Card','Bank transfer'].map(x=>`<option ${(S.defpay||'Cash')===x?'selected':''}>${x}</option>`).join('')}</select>`)}</div><div style='margin-top:12px'>${f('Receipt footer message',`<input data-sf='footer' placeholder='Shukuriyaa! Thank you.' value='${esc(S.footer||'')}'>`)}</div><p class='sub' style='margin:8px 0 0;font-size:13px'>Changes save automatically. Prices include GST. Check the current rate with MIRA.</p></div>
+  <div class='card'><div class='hd'>Shop details</div><div class='g2'>${f('Shop name',`<input data-sf='shop' value='${esc(S.shop||'')}'>`)}${f('Mobile number (shown on invoices)',`<input data-sf='phone' inputmode='tel' placeholder='e.g. 7771234' value='${esc(S.phone||'')}'>`)}</div><div style='margin-top:12px'>${f('Address',`<input data-sf='addr' value='${esc(S.addr||'')}'>`)}</div><label class='chk' style='margin-top:12px'><input type='checkbox' data-tg='gstOn' ${gstOn()?'checked':''}>This shop collects GST</label><p class='sub' style='margin:4px 0 0;font-size:13px'>${gstOn()?'Invoices say Tax invoice and show the GST lines.':'Invoices say Invoice and show no GST. Turn this on only if the shop is GST registered.'}</p><div class='g2' style='margin-top:12px'>${gstOn()?f('GST TIN',`<input data-sf='tin' value='${esc(S.tin||'')}'>`)+f('GST rate (%)',`<input type='number' min='0' data-sf='gst' value='${S.gst}'>`):''}${f('Default payment method',`<select data-sf='defpay'>${['Cash','Card','Bank transfer'].map(x=>`<option ${(S.defpay||'Cash')===x?'selected':''}>${x}</option>`).join('')}</select>`)}</div><div style='margin-top:12px'>${f('Receipt footer message',`<input data-sf='footer' placeholder='Shukuriyaa! Thank you.' value='${esc(S.footer||'')}'>`)}</div><p class='sub' style='margin:8px 0 0;font-size:13px'>Changes save automatically. Prices include GST. Check the current rate with MIRA.</p></div>
+  <div class='card'><div class='hd'>Receipt options</div><label class='chk' style='margin:0'><input type='checkbox' data-tg='rcCashier' ${S.rcCashier!==false?'checked':''}>Show who served the customer</label><label class='chk'><input type='checkbox' data-tg='rcBal' ${S.rcBal?'checked':''}>Show the customer's unpaid balance</label><div style='margin-top:12px'>${f('Terms and conditions (printed on invoices, receipts and quotations)',`<textarea data-sf='terms' rows='3' placeholder='e.g. Goods can be exchanged within 7 days with this receipt.'>${esc(S.terms||'')}</textarea>`)}</div><div class='g2' style='margin-top:12px'><div><span class='fl'>Logo (A4 and A5 invoices, quotations)</span>${S.logo?`<img src='${S.logo}' alt='Logo' style='max-height:48px;max-width:100%;display:block;margin:6px 0;background:#fff;border-radius:6px'>`:''}<div style='display:flex;gap:8px;flex-wrap:wrap'><button class='ghost' data-imgpick='logo'>${S.logo?'Replace':'Add logo'}</button>${S.logo?`<button class='ghost danger' data-imgrm='logo'>Remove</button>`:''}</div></div><div><span class='fl'>Payment QR (bank transfer)</span>${S.payqr?`<img src='${S.payqr}' alt='Payment QR' style='height:64px;display:block;margin:6px 0;background:#fff;border-radius:6px'>`:''}<div style='display:flex;gap:8px;flex-wrap:wrap'><button class='ghost' data-imgpick='payqr'>${S.payqr?'Replace':'Add QR image'}</button>${S.payqr?`<button class='ghost danger' data-imgrm='payqr'>Remove</button>`:''}</div></div></div><input type='file' id='imgf' accept='image/*' style='display:none'><p class='sub' style='margin:10px 0 0;font-size:13px'>The logo and QR print on A4 and A5 invoices. Thermal receipts stay text only.</p></div>
   <div class='card'><div class='hd'>Printing defaults</div><div class='g2'>${f('Default paper',`<select data-sf='pfmt'>${[['80','Thermal receipt 80 mm'],['58','Thermal receipt 58 mm'],['a5','A5 invoice'],['a4','A4 invoice']].map(o=>`<option value='${o[0]}' ${pf===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>`)}<label class='chk' style='margin:0;align-self:end;border:0'><input type='checkbox' data-tg='auto' ${S.auto?'checked':''}>Print after each sale</label></div><button class='ghost' style='margin-top:12px' data-tprint>Test print</button><p class='sub' style='margin:8px 0 0;font-size:13px'>Browsers print through your operating system, so you pick the printer in the print window. Mark a default printer below and the app reminds you which one to choose.</p></div>
   <div class='card'><div class='hd'>Connected devices</div>${dev.length?dev.map(d=>`<div class='item'><div>${esc(d.name)}${d.def?` <span class='tag'>Default</span>`:''}<small>${T[d.type]} \u00b7 ${d.conn}</small></div><div style='display:flex;gap:8px'>${d.type==='rprinter'||d.type==='aprinter'?`<button class='ghost' data-dd='${d.id}'>${d.def?'Unset default':'Set default'}</button>`:''}<button class='ghost danger' data-dr='${d.id}'>Remove</button></div></div>`).join(''):`<div class='empty'>No devices added yet.</div>`}
   <div class='hd' style='margin-top:18px;font-size:16px'>Add a device</div><div class='g2'>${f('Device name',`<input id='dn' placeholder='e.g. Epson TM-T20III'>`)}${f('Type',`<select id='dt'>${Object.entries(T).map(([k,v])=>`<option value='${k}'>${v}</option>`).join('')}</select>`)}</div><div class='g2' style='margin-top:12px'>${f('Connection',`<select id='dc'><option>USB</option><option>Bluetooth</option><option>Network</option><option>System</option></select>`)}<div style='align-self:end'><button class='go' style='margin:0' data-adddev>Add device</button></div></div><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:12px'><button class='ghost' data-pairusb>Pair USB device</button><button class='ghost' data-pairbt>Pair Bluetooth device</button></div><p class='sub' style='margin:8px 0 0;font-size:13px'>Choose the type first, then pair. Pairing needs a browser that supports it, such as Chrome.</p></div>
@@ -846,16 +847,16 @@ function done(){
   const ps=pays.map(p=>({m:p.m,a:+p.a||0})).filter(p=>p.a>0);
   for(let i=ps.length-1;i>=0&&over>0;i--){const c=Math.min(over,ps[i].a);ps[i].a-=c;over-=c}
   const pd=ps.reduce((a,p)=>a+p.a,0),due=Math.max(0,t.t-pd),c=S.customers.find(x=>x.id==cu);
-  const inv={no:"INV-"+nextSeq(),at:Date.now(),by:me.name,cust:c?c.name:'Walk-in',cid:c?c.id:0,items:cart.map(l=>({...l})),sub:t.sub,disc:t.d,reason,total:t.t,gst:t.gst,rate:S.gst,pays:ps.filter(p=>p.a>0),due};
+  const inv={no:"INV-"+nextSeq(),at:Date.now(),by:me.name,cust:c?c.name:'Walk-in',cid:c?c.id:0,items:cart.map(l=>({...l})),sub:t.sub,disc:t.d,reason,total:t.t,gst:t.gst,rate:S.gstOn===false?0:S.gst,tax:S.gstOn!==false,pays:ps.filter(p=>p.a>0),due};
   if(c&&due>0)c.bal+=due;
   cart.forEach(l=>{const n=node(l);if(n)n.stock=Math.round((n.stock-l.qty*(l.pq||1))*1000)/1000;const p=S.products.find(x=>x.id===l.id);if(p)p.stock=pstock(p)});
   inv.pays.forEach(p=>S.cash.push({at:inv.at,t:"in",m:p.m,a:p.a,note:"Sale "+inv.no}));
   S.inv.unshift(inv);save();cart=[];disc="";reason="";cu="";pays=[{m:"Cash",a:""}];showRc(inv);render();if(S.auto)doPrint(inv,S.pfmt||'80');
 }
-function rc(i){return `<div class="rc"><div class="ctr"><b style="font-size:16px">${esc(S.shop||'Atoll Mart')}</b>${S.addr?'<br>'+esc(S.addr):''}${S.tin?'<br>GST TIN: '+esc(S.tin):''}<br>Tax invoice ${i.no}<br>${dlabel(i.at)}<br>Customer: ${esc(i.cust)}<br>Served by: ${esc(i.by||'-')}</div><hr>${i.items.map(l=>`<div>${esc(l.name)}${l.tx?" (no GST)":""}</div><div class="row"><span>${ql(l)}</span><span>${(l.qty*l.price).toFixed(2)}</span></div>`).join("")}<hr>
+function rc(i){return `<div class="rc"><div class="ctr"><b style="font-size:16px">${esc(S.shop||'Atoll Mart')}</b>${S.phone?'<br>Tel: '+esc(S.phone):''}${S.addr?'<br>'+esc(S.addr):''}${S.tin&&i.tax!==false?'<br>GST TIN: '+esc(S.tin):''}<br>${i.tax===false?'Invoice':'Tax invoice'} ${i.no}<br>${dlabel(i.at)}<br>Customer: ${esc(i.cust)}${S.rcCashier!==false?`<br>Served by: ${esc(i.by||'-')}`:''}</div><hr>${i.items.map(l=>`<div>${esc(l.name)}${l.tx&&i.tax!==false?" (no GST)":""}</div><div class="row"><span>${ql(l)}</span><span>${(l.qty*l.price).toFixed(2)}</span></div>`).join("")}<hr>
   <div class="row"><span>Subtotal</span><span>${i.sub.toFixed(2)}</span></div>${i.disc?`<div class="row"><span>Discount${i.reason?" ("+esc(i.reason)+")":""}</span><span>−${i.disc.toFixed(2)}</span></div>`:""}
-  <div class="row"><span>Total excl. GST</span><span>${(i.total-i.gst).toFixed(2)}</span></div><div class="row"><span>GST ${i.rate}%</span><span>${i.gst.toFixed(2)}</span></div><div class="row" style="font-size:16px"><b>Total incl. GST (MVR)</b><b>${i.total.toFixed(2)}</b></div><hr>
-  ${i.pays.map(p=>`<div class="row"><span>${p.m}</span><span>${p.a.toFixed(2)}</span></div>`).join("")}${i.due>0.005?`<div class="row"><b>Balance due</b><b>${i.due.toFixed(2)}</b></div>`:""}<p class="ctr">${esc(S.footer||'Shukuriyaa!')}</p></div>`}
+  ${i.tax===false?'':`<div class="row"><span>Total excl. GST</span><span>${(i.total-i.gst).toFixed(2)}</span></div><div class="row"><span>GST ${i.rate}%</span><span>${i.gst.toFixed(2)}</span></div>`}<div class="row" style="font-size:16px"><b>${i.tax===false?'Total (MVR)':'Total incl. GST (MVR)'}</b><b>${i.total.toFixed(2)}</b></div><hr>
+  ${i.pays.map(p=>`<div class="row"><span>${p.m}</span><span>${p.a.toFixed(2)}</span></div>`).join("")}${i.due>0.005?`<div class="row"><b>Balance due</b><b>${i.due.toFixed(2)}</b></div>`:""}${rcBalRow(i)}${S.terms?`<p class="ctr" style="font-size:11px;white-space:pre-wrap">${esc(S.terms)}</p>`:''}<p class="ctr">${esc(S.footer||'Shukuriyaa!')}</p></div>`}
 function showRc(i){
   const due=i.due>0.005&&can('recv');
   $("#m").innerHTML=`<div class="modal"><div>${rc(i)}${due?`<label>Receive payment</label><div class="pay" style="grid-template-columns:1fr 1fr"><select id="rm"><option>Cash</option><option>Card</option><option>Bank transfer</option></select><input id="ra" type="number" min="0" placeholder="MVR amount"></div><button class="go" style="margin-top:4px" data-recv="${i.no}">Record payment</button>`:""}<label>Paper</label><select id='pf'>${[['80','Thermal receipt 80 mm'],['58','Thermal receipt 58 mm'],['a5','A5 invoice'],['a4','A4 invoice']].map(o=>`<option value='${o[0]}' ${(S.pfmt||'80')===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select><div class='two'><button class='p' data-print='${i.no}'>Print</button><button data-pdf='${i.no}'>Save as PDF</button></div>${can('refund')&&!i.cn&&!i.refunded?`<button class='ghost danger' style='width:100%;margin-top:8px' data-refund='${i.no}'>Refund this invoice</button>`:''}<button class='ghost' style='width:100%;margin-top:8px' data-close>Close</button></div></div>`;
@@ -1188,7 +1189,7 @@ function lines(){if(tab!=='pos')return;if(usv==='items'){sellList();cartBar()}if
 function upd(){}
 function uCartTot(){
   const t=tot(),el=$('#ctot');if(!el)return;
-  el.innerHTML=`<div class='row'><span>Subtotal</span><span>${m(t.sub)}</span></div>${t.d?`<div class='row'><span>Discount</span><span>\u2212${m(t.d)}</span></div>`:''}<div class='row' style='color:var(--mut)'><span>Total excl. GST</span><span>${m(t.t-t.gst)}</span></div><div class='row' style='color:var(--mut)'><span>GST ${S.gst}%</span><span>${m(t.gst)}</span></div><div class='row' style='font-size:18px'><b>Total incl. GST</b><b>${m(t.t)}</b></div>`;
+  el.innerHTML=`<div class='row'><span>Subtotal</span><span>${m(t.sub)}</span></div>${t.d?`<div class='row'><span>Discount</span><span>\u2212${m(t.d)}</span></div>`:''}${gstOn()?`<div class='row' style='color:var(--mut)'><span>Total excl. GST</span><span>${m(t.t-t.gst)}</span></div><div class='row' style='color:var(--mut)'><span>GST ${S.gst}%</span><span>${m(t.gst)}</span></div>`:''}<div class='row' style='font-size:18px'><b>${gstOn()?'Total incl. GST':'Total'}</b><b>${m(t.t)}</b></div>`;
 }
 function uCartSheet(){
   const sc=document.querySelector('#csheet>div'),top=sc?sc.scrollTop:0;
@@ -1210,7 +1211,7 @@ function uCompleteSale(change){
   const t=tot(),ps=pmts.map(p=>({m:p.m,a:p.a,ref:p.ref||''})),pd=ps.reduce((a,p)=>a+p.a,0),due=Math.max(0,Math.round((t.t-pd)*100)/100),c=S.customers.find(x=>x.id==cu);
   if(due>0.005&&!c){toast('Choose a customer to put the balance on credit.',1);return}
   if(due>0.005&&c.limit>0&&c.bal+due>c.limit+0.005){toast(c.name+' has a credit limit of '+m(c.limit)+' and already owes '+m(c.bal)+'.',1);return}
-  const inv={no:'INV-'+nextSeq(),at:Date.now(),by:me.name,cust:c?c.name:'Walk-in',cid:c?c.id:0,items:cart.map(l=>({...l})),sub:t.sub,disc:t.d,reason,total:t.t,gst:t.gst,rate:S.gst,std:t.std,zero:t.zero,exempt:t.exempt,pays:ps,due:due>0.005?due:0};
+  const inv={no:'INV-'+nextSeq(),at:Date.now(),by:me.name,cust:c?c.name:'Walk-in',cid:c?c.id:0,items:cart.map(l=>({...l})),sub:t.sub,disc:t.d,reason,total:t.t,gst:t.gst,rate:S.gstOn===false?0:S.gst,tax:S.gstOn!==false,std:t.std,zero:t.zero,exempt:t.exempt,pays:ps,due:due>0.005?due:0};
   if(c&&inv.due>0)c.bal+=inv.due;
   cart.forEach(l=>{const n=node(l);if(n)n.stock=Math.round((n.stock-l.qty*(l.pq||1))*1000)/1000;const p=S.products.find(x=>x.id===l.id);if(p)p.stock=pstock(p)});
   inv.pays.forEach(p=>S.cash.push({at:inv.at,t:'in',m:p.m,a:p.a,note:'Sale '+inv.no}));
@@ -1279,7 +1280,7 @@ function render(){
   const pp=app.dataset.p;chrome();app.dataset.p=tab==='pos'?'pos-'+usv:tab;
   app.classList.remove('enter');if(pp!==app.dataset.p){void app.offsetWidth;app.classList.add('enter');clearTimeout(window.__enT);window.__enT=setTimeout(()=>app.classList.remove('enter'),1500)}
   $('#tb').dataset.w=(tab==='ov'||tab==='pr'||(tab==='pos'&&usv==='items'))?'w':'n';
-  ({ov,pr,pos,inv,cb,team,biz,cust:custPage,set:setts})[tab]();
+  ({ov,pr,pos,inv,cb,team,biz,act:actPage,quot:quotPage,cust:custPage,set:setts})[tab]();
 }
 function animNum(el,to){
   if(!el)return;if(typeof requestAnimationFrame!=='function'){el.textContent=m(to);return}
@@ -1294,7 +1295,7 @@ function sItems(){
   sellList();cartBar();cartPanel();
 }
 function uCartInner(pid){
-  return `${cart.length?cart.map((l,i)=>`<div class='cl'><div class='cn'><b>${esc(l.name)}</b><small>${m(l.price)}${l.unit==='kg'?' / kg':''}${l.tx?' \u00b7 no GST':''}</small></div>${l.unit==='kg'?`<button class='ghost' data-wedit='${i}'>${+l.qty.toFixed(3)} kg</button>`:`<div class='stp'><button data-dec='${i}' aria-label='Fewer'>\u2212</button><input class='qin' type='number' inputmode='numeric' min='0' step='1' value='${l.qty}' data-v3q='${i}' aria-label='Quantity'><button data-inc='${i}' aria-label='More'>+</button></div>`}<b class='lt'>${m(lt(l))}</b><button class='ib' data-v3rm='${i}' aria-label='Remove'>${ic('trash')}</button></div>`).join(''):`<div class='empty'>Your cart is empty.</div>`}${can('credit')?`<span class='fl' style='margin-top:14px'>Customer (needed for credit)</span><select data-v3cust><option value=''>Walk-in customer</option>${S.customers.map(c=>`<option value='${c.id}' ${cu==c.id?'selected':''}>${esc(c.name)}${c.bal?' \u00b7 owes '+m(c.bal):''}</option>`).join('')}<option value='new'>+ New customer</option></select>${unewc?`<div style='display:flex;gap:8px;margin-top:8px'><input id='v3nc' placeholder='Customer name'><button class='go' style='width:auto;margin:0;padding:0 18px' data-v3addc>Save</button></div>`:''}`:''}${can('discount')?`<div class='g2' style='margin-top:12px'><div><span class='fl'>Discount (MVR)</span><input type='number' min='0' inputmode='decimal' data-v3disc value='${disc}' placeholder='0.00'></div><div><span class='fl'>Reason</span><input data-v3reason value='${esc(reason)}' placeholder='Why?'></div></div>`:''}<div id='${pid}' style='margin-top:14px'></div><button class='go' data-v3go ${cart.length?'':'disabled'}>Continue to payment</button>`;
+  return `${cart.length?cart.map((l,i)=>`<div class='cl'><div class='cn'><b>${esc(l.name)}</b><small>${m(l.price)}${l.unit==='kg'?' / kg':''}${l.tx&&gstOn()?' \u00b7 no GST':''}</small></div>${l.unit==='kg'?`<button class='ghost' data-wedit='${i}'>${+l.qty.toFixed(3)} kg</button>`:`<div class='stp'><button data-dec='${i}' aria-label='Fewer'>\u2212</button><input class='qin' type='number' inputmode='numeric' min='0' step='1' value='${l.qty}' data-v3q='${i}' aria-label='Quantity'><button data-inc='${i}' aria-label='More'>+</button></div>`}<b class='lt'>${m(lt(l))}</b><button class='ib' data-v3rm='${i}' aria-label='Remove'>${ic('trash')}</button></div>`).join(''):`<div class='empty'>Your cart is empty.</div>`}${can('credit')?`<span class='fl' style='margin-top:14px'>Customer (needed for credit)</span><select data-v3cust><option value=''>Walk-in customer</option>${S.customers.map(c=>`<option value='${c.id}' ${cu==c.id?'selected':''}>${esc(c.name)}${c.bal?' \u00b7 owes '+m(c.bal):''}</option>`).join('')}<option value='new'>+ New customer</option></select>${unewc?`<div style='display:flex;gap:8px;margin-top:8px'><input id='v3nc' placeholder='Customer name'><button class='go' style='width:auto;margin:0;padding:0 18px' data-v3addc>Save</button></div>`:''}`:''}${can('discount')?`<div class='g2' style='margin-top:12px'><div><span class='fl'>Discount (MVR)</span><input type='number' min='0' inputmode='decimal' data-v3disc value='${disc}' placeholder='0.00'></div><div><span class='fl'>Reason</span><input data-v3reason value='${esc(reason)}' placeholder='Why?'></div></div>`:''}<div id='${pid}' style='margin-top:14px'></div><button class='go' data-v3go ${cart.length?'':'disabled'}>Continue to payment</button>`;
 }
 function cartPanel(){const el=$('#cpn');if(!el)return;el.innerHTML=`<div class='card'><div class='hd'>Current sale<span class='pc2'>${cart.length} item${cart.length===1?'':'s'}</span></div>${uCartInner('ptot')}</div>`;uCartTot()}
 function uCartSheet(){
@@ -1304,7 +1305,7 @@ function uCartSheet(){
 }
 function refreshCart(){if(document.querySelector('#csheet'))uCartSheet();else cartPanel();refreshTabs()}
 function uCartTot(){
-  const t=tot(),gf=t.zero+t.exempt,h=`<div class='row'><span>Subtotal</span><span>${m(t.sub)}</span></div>${t.d?`<div class='row'><span>Discount</span><span>\u2212${m(t.d)}</span></div>`:''}${gf>0.005?`<div class='row' style='color:var(--mut)'><span>Items with no GST</span><span>${m(gf)}</span></div>`:''}<div class='row' style='color:var(--mut)'><span>Total excl. GST</span><span>${m(t.t-t.gst)}</span></div><div class='row' style='color:var(--mut)'><span>GST ${S.gst}%</span><span>${m(t.gst)}</span></div><div class='row' style='font-size:18px'><b>Total incl. GST</b><b>${m(t.t)}</b></div>`;
+  const t=tot(),gf=t.zero+t.exempt,h=`<div class='row'><span>Subtotal</span><span>${m(t.sub)}</span></div>${t.d?`<div class='row'><span>Discount</span><span>\u2212${m(t.d)}</span></div>`:''}${gf>0.005&&gstOn()?`<div class='row' style='color:var(--mut)'><span>Items with no GST</span><span>${m(gf)}</span></div>`:''}${gstOn()?`<div class='row' style='color:var(--mut)'><span>Total excl. GST</span><span>${m(t.t-t.gst)}</span></div><div class='row' style='color:var(--mut)'><span>GST ${S.gst}%</span><span>${m(t.gst)}</span></div>`:''}<div class='row' style='font-size:18px'><b>${gstOn()?'Total incl. GST':'Total'}</b><b>${m(t.t)}</b></div>`;
   ['ctot','ptot'].forEach(id=>{const el=$('#'+id);if(el)el.innerHTML=h});
 }
 function lines(){if(tab!=='pos')return;if(usv==='items'){sellList();cartBar();cartPanel();refreshTabs()}if(document.querySelector('#csheet'))uCartSheet()}
@@ -1327,11 +1328,11 @@ function prList(){
 Object.assign(I,{print:'<path d="M7 9V4h10v5M7 17H5a1 1 0 01-1-1v-5a2 2 0 012-2h12a2 2 0 012 2v5a1 1 0 01-1 1h-2M7 14h10v6H7z"/>'});
 const NAV=[
  {h:null,items:[['ov','Dashboard','ov','',()=>true]]},
- {h:'Selling',items:[['pos','Sell','pos','',()=>can('sell')],['inv','Invoices','inv','',()=>can('invview')],['cust','Customers','cust','',()=>can('sell')],['reg','Register','biz','reg',()=>can('register')]]},
+ {h:'Selling',items:[['pos','Sell','pos','',()=>can('sell')],['inv','Invoices','inv','',()=>can('invview')],['quot','Quotations','quot','',()=>can('sell')],['cust','Customers','cust','',()=>can('sell')],['reg','Register','biz','reg',()=>can('register')]]},
  {h:'Catalog',items:[['pr','Products','pr','',()=>can('prodview')],['pur','Purchasing','biz','pur',()=>can('purchase')],['imp','Import products','biz','imp',()=>can('prodedit')]]},
  {h:'Money',items:[['cb','Cashbook','cb','',()=>can('cbview')],['rep','Reports','biz','rep',()=>can('reports')],['gst','GST report','biz','gst',()=>can('reports')]]},
- {h:'System',items:[['team','Team','team','users',()=>mgr()],['sub','Subscription','team','plan',()=>mgr()],['prt','Printing and devices','set','print',()=>mgr()],['set','Settings','set','shop',()=>mgr()]]}];
-const NICN2={ov:'ov',pos:'cart',inv:'doc',cust:'users',reg:'reg',pr:'pr',pur:'box',imp:'imp',cb:'cb',rep:'chart',gst:'rcpt',team:'users',sub:'card',prt:'print',set:'set'};
+ {h:'System',items:[['team','Team','team','users',()=>mgr()],['sub','Subscription','team','plan',()=>mgr()],['act','Activity log','act','',()=>mgr()],['prt','Printing and devices','set','print',()=>mgr()],['set','Settings','set','shop',()=>mgr()]]}];
+const NICN2={act:'doc',quot:'doc',ov:'ov',pos:'cart',inv:'doc',cust:'users',reg:'reg',pr:'pr',pur:'box',imp:'imp',cb:'cb',rep:'chart',gst:'rcpt',team:'users',sub:'card',prt:'print',set:'set'};
 let tm='users',sm='shop',ucq='';
 const navAct=x=>x[2]===tab&&(tab==='biz'?(x[3]==='gst'?(bz==='rep'&&rt==='gst'):x[3]==='rep'?(bz==='rep'&&rt!=='gst'):x[3]===bz):tab==='team'?x[3]===tm:tab==='set'?x[3]===sm:true);
 function chrome(){
@@ -1381,36 +1382,36 @@ const pdfTxt=s=>String(s==null?'':s).replace(/[^\x20-\x7E\u00A0-\u00FF]/g,'?');
 function pdfFor(i,fmt){
   const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return null;
   const th=fmt==='80'||fmt==='58',f2=x=>(+x).toFixed(2),own=S.users.find(u=>u.role==='owner');
-  const nm=l=>pdfTxt(l.name+(l.tx?' (no GST)':'')),qty=l=>pdfTxt(ql(l));
+  const nm=l=>pdfTxt(l.name+(l.tx&&i.tax!==false?' (no GST)':'')),qty=l=>pdfTxt(ql(l));
   function drawThermal(doc,W){
     const M=4,lh=fmt==='58'?3.3:3.7,fs=fmt==='58'?7:8,iw=W-2*M;let y=M+3;
     doc.setFont('courier','normal');doc.setFontSize(fs);
     const ctr=(t,b)=>{doc.setFont('courier',b?'bold':'normal');doc.splitTextToSize(pdfTxt(t),iw).forEach(s=>{doc.text(s,W/2,y,{align:'center'});y+=lh})},ln=()=>{doc.setFont('courier','normal');doc.text('-'.repeat(Math.floor(iw/(fs*0.2117*0.6))),M,y);y+=lh},rw=(a,b,bold)=>{doc.setFont('courier',bold?'bold':'normal');const L=doc.splitTextToSize(pdfTxt(a),iw-22);L.forEach((s,k)=>{doc.text(s,M,y);if(k===L.length-1&&b!=null)doc.text(pdfTxt(b),W-M,y,{align:'right'});y+=lh})};
-    ctr(S.shop||'Receipt',1);if(S.addr)ctr(S.addr);if(S.tin)ctr('GST TIN: '+S.tin);ctr('Tax invoice '+i.no);ctr(dlabel(i.at));ctr('Customer: '+i.cust);if(i.by)ctr('Served by: '+i.by);ln();
+    ctr(S.shop||'Receipt',1);if(S.phone)ctr('Tel: '+S.phone);if(S.addr)ctr(S.addr);if(S.tin&&i.tax!==false)ctr('GST TIN: '+S.tin);ctr((i.tax===false?'Invoice ':'Tax invoice ')+i.no);ctr(dlabel(i.at));ctr('Customer: '+i.cust);if(i.by&&S.rcCashier!==false)ctr('Served by: '+i.by);ln();
     i.items.forEach(l=>{rw(nm(l));rw(qty(l),f2(l.qty*l.price))});ln();
-    rw('Subtotal',f2(i.sub));if(i.disc)rw('Discount','-'+f2(i.disc));rw('Total excl. GST',f2(i.total-i.gst));rw('GST '+i.rate+'%',f2(i.gst));rw('TOTAL incl. GST (MVR)',f2(i.total),1);ln();
-    i.pays.forEach(p=>rw(p.m,f2(p.a)));if(i.due>0.005)rw('Balance due',f2(i.due),1);ln();ctr(S.footer||'Shukuriyaa!');
+    rw('Subtotal',f2(i.sub));if(i.disc)rw('Discount','-'+f2(i.disc));if(i.tax!==false){rw('Total excl. GST',f2(i.total-i.gst));rw('GST '+i.rate+'%',f2(i.gst))}rw(i.tax===false?'TOTAL (MVR)':'TOTAL incl. GST (MVR)',f2(i.total),1);ln();
+    i.pays.forEach(p=>rw(p.m,f2(p.a)));if(i.due>0.005)rw('Balance due',f2(i.due),1);{const b=rcBal(i);if(b)rw('Customer balance owing',f2(b))}ln();if(S.terms){ctr(S.terms);ln()}ctr(S.footer||'Shukuriyaa!');
     return y+M;
   }
   function drawPage(doc){
     const pw=doc.internal.pageSize.getWidth(),ph=doc.internal.pageSize.getHeight(),M=fmt==='a5'?12:16,R=pw-M;let y=M+4;
     const T=(t,x,yy,o)=>doc.text(pdfTxt(t),x,yy,o);
-    doc.setFont('helvetica','bold');doc.setFontSize(fmt==='a5'?15:18);T(S.shop||'Invoice',M,y);
-    doc.setFontSize(fmt==='a5'?12:14);T('TAX INVOICE',R,y,{align:'right'});y+=6;
+    if(S.logo&&S.logoR){try{const lw=26,lh=Math.min(20,lw*S.logoR);doc.addImage(S.logo,imgFmt(S.logo),M,y-3,lw,lh);y+=lh+1}catch(e){}}doc.setFont('helvetica','bold');doc.setFontSize(fmt==='a5'?15:18);T(S.shop||'Invoice',M,y);
+    doc.setFontSize(fmt==='a5'?12:14);T(i.tax===false?'INVOICE':'TAX INVOICE',R,y,{align:'right'});y+=6;
     doc.setFont('helvetica','normal');doc.setFontSize(9);
-    let y2=y;if(own&&own.email){T(own.email,M,y2);y2+=4.5}if(S.addr){T(S.addr,M,y2);y2+=4.5}if(S.tin){T('GST TIN: '+S.tin,M,y2);y2+=4.5}
+    let y2=y;if(S.phone){T('Tel: '+S.phone,M,y2);y2+=4.5}if(S.addr){T(S.addr,M,y2);y2+=4.5}if(S.tin&&i.tax!==false){T('GST TIN: '+S.tin,M,y2);y2+=4.5}
     T(i.no,R,y,{align:'right'});T(dlabel(i.at),R,y+4.5,{align:'right'});y=Math.max(y2,y+9)+3;
     doc.setDrawColor(40);doc.line(M,y,R,y);y+=7;
-    doc.setFont('helvetica','bold');T('Bill to',M,y);doc.setFont('helvetica','normal');y+=5;T(i.cust,M,y);if(i.by){y+=4.5;T('Served by '+i.by,M,y)}y+=9;
+    doc.setFont('helvetica','bold');T('Bill to',M,y);doc.setFont('helvetica','normal');y+=5;T(i.cust,M,y);if(i.by&&S.rcCashier!==false){y+=4.5;T('Served by '+i.by,M,y)}y+=9;
     const cx=[M,R-62,R-34,R],head=()=>{doc.setFillColor(238);doc.rect(M,y-4.5,R-M,7,'F');doc.setFont('helvetica','bold');T('Item',cx[0]+1.5,y);T('Qty',cx[1],y,{align:'right'});T('Price',cx[2],y,{align:'right'});T('Amount',cx[3]-1.5,y,{align:'right'});doc.setFont('helvetica','normal');y+=7};
     head();
     i.items.forEach(l=>{const w=doc.splitTextToSize(nm(l),cx[1]-M-22),h=Math.max(1,w.length)*4.6+2;if(y+h>ph-60){doc.addPage();y=M+6;head()}
       w.forEach((s,k)=>T(s,cx[0]+1.5,y+k*4.6));T(l.unit==='kg'?(+l.qty.toFixed(3))+' kg':String(l.qty),cx[1],y,{align:'right'});T(f2(l.price)+(l.unit==='kg'?'/kg':''),cx[2],y,{align:'right'});T(f2(l.qty*l.price),cx[3]-1.5,y,{align:'right'});y+=h;doc.setDrawColor(210);doc.line(M,y-3,R,y-3)});
     if(y>ph-70){doc.addPage();y=M+6}y+=4;
     const lx=R-70,row=(a,b,bold)=>{doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(bold?11:9);T(a,lx,y);T(b,R,y,{align:'right'});y+=bold?7:5};
-    row('Subtotal',f2(i.sub));if(i.disc)row('Discount','-'+f2(i.disc));row('Total excl. GST',f2(i.total-i.gst));row('GST '+i.rate+'%',f2(i.gst));row('Total incl. GST (MVR)',f2(i.total),1);
-    doc.setFontSize(9);i.pays.forEach(p=>row('Paid by '+p.m,f2(p.a)));if(i.due>0.005)row('Balance due',f2(i.due),1);
-    doc.setFont('helvetica','normal');doc.setFontSize(9);T(S.footer||'Thank you for your business.',pw/2,ph-M,{align:'center'});
+    row('Subtotal',f2(i.sub));if(i.disc)row('Discount','-'+f2(i.disc));if(i.tax!==false){row('Total excl. GST',f2(i.total-i.gst));row('GST '+i.rate+'%',f2(i.gst))}row(i.tax===false?'Total (MVR)':'Total incl. GST (MVR)',f2(i.total),1);
+    doc.setFontSize(9);i.pays.forEach(p=>row('Paid by '+p.m,f2(p.a)));if(i.due>0.005)row('Balance due',f2(i.due),1);{const b=rcBal(i);if(b)row('Customer balance owing',f2(b))}
+    pdfExtras(doc,y,M,R,pw,ph,T);doc.setFont('helvetica','normal');doc.setFontSize(9);T(S.footer||'Thank you for your business.',pw/2,ph-M,{align:'center'});
   }
   if(th){const W=fmt==='58'?58:80,probe=new J({unit:'mm',format:[W,400]}),H=drawThermal(probe,W),doc=new J({unit:'mm',format:[W,Math.max(60,H)]});drawThermal(doc,W);return doc}
   const doc=new J({unit:'mm',format:fmt==='a5'?'a5':'a4',orientation:'portrait'});drawPage(doc);return doc;
@@ -1570,7 +1571,7 @@ function admin(){return CLOUD?adminCloud():adminLocal()}
 /* Runs only when public/config.js holds a Supabase URL and anon key. Without them the app is the local demo. */
 const pinEq=v=>!!me&&v===me.pin;
 const cj=v=>JSON.stringify(v,(k,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o,y)=>(o[y]=x[y],o),{}):x);
-const blankS=()=>({products:[],customers:[],inv:[],cash:[],seq:1001,gst:8,plan:'basic',renew:Date.now()+30*864e5,status:'active',devs:[],cats:[],sups:[],pord:[],regs:[],log:[],reqs:[],users:[]});
+const blankS=()=>({products:[],customers:[],inv:[],cash:[],seq:1001,gst:8,plan:'basic',renew:Date.now()+30*864e5,status:'active',devs:[],cats:[],sups:[],pord:[],regs:[],log:[],quots:[],reqs:[],users:[]});
 const rid0=r=>r.id!=null?String(r.id):(r.id=(r.at||Date.now())+'-'+Math.random().toString(36).slice(2,8));
 const byId=(a,b)=>(+a.id||0)-(+b.id||0);
 const KINDS={
@@ -1582,12 +1583,15 @@ const KINDS={
   sups:{get:()=>S.sups,set:a=>{S.sups=a},id:r=>String(r.id),sort:byId},
   pord:{get:()=>S.pord,set:a=>{S.pord=a},id:r=>String(r.id),sort:(a,b)=>b.id-a.id},
   devs:{get:()=>S.devs,set:a=>{S.devs=a},id:r=>String(r.id),sort:byId},
+  quot:{get:()=>S.quots||(S.quots=[]),set:a=>{S.quots=a},id:r=>String(r.no),sort:(a,b)=>b.at-a.at},
   log:{get:()=>S.log,set:a=>{S.log=a},id:rid0,sort:(a,b)=>b.at-a.at},
   cats:{get:()=>S.cats.map(n=>({id:n,n})),set:a=>{S.cats=a.map(r=>r.n)},id:r=>String(r.id),sort:(a,b)=>String(a.n).localeCompare(String(b.n))}
 };
-const LOCAL_ONLY=new Set(['products','customers','inv','cash','regs','sups','pord','devs','log','cats','users','reqs','plan','renew','status','shop','tin','gst','seq','theme']);
+const LOCAL_ONLY=new Set(['quots','products','customers','inv','cash','regs','sups','pord','devs','log','cats','users','reqs','plan','renew','status','shop','tin','gst','seq','theme']);
 const shopPayload=()=>{const st={};Object.keys(S).forEach(k=>{if(!LOCAL_ONLY.has(k)&&S[k]!==undefined)st[k]=S[k]});return{name:S.shop||'Shop',gst_tin:S.tin||null,gst_rate:+S.gst||0,settings:st}};
-const errMsg=e=>(e&&(e.message||e.error_description||e.msg))||String(e||'Something went wrong');
+const errMsg=e=>{const m=(e&&(e.message||e.error_description||e.msg))||String(e||'Something went wrong');
+  if(/load failed|failed to fetch|networkerror|fetch failed/i.test(m)){let h='';try{h=new URL(CFG.supabaseUrl).host}catch(x){}return 'Cannot reach the server'+(h?' ('+h+')':'')+'. Check your internet. If this keeps happening the SUPABASE_URL setting in Vercel is probably wrong.'}
+  return m};
 const isNet=e=>/failed to fetch|networkerror|network request|load failed|fetch/i.test(errMsg(e))||(e&&e.status===0);
 Object.assign(cl,{mode:'home',loading:false,err:'',shop:null,uid:null,admin:false,snap:{},pools:[],dirty:false,busy:false,again:false,timer:null,lastSync:'',ch:null});
 
@@ -2154,6 +2158,212 @@ function diagShow(){
 }
 setTimeout(()=>{const a=document.getElementById('app');if(a&&!a.innerText.trim())diagShow()},3500);
 if(!CLOUD&&CFG.supabaseUrl){window.addEventListener('DOMContentLoaded',()=>setTimeout(diagShow,0))}
+
+/* ===== v6: mobile number on invoices, GST on/off per shop, quotations ===== */
+const gstOn=()=>S.gstOn!==false;
+const QL=()=>S.quots||(S.quots=[]);
+const qDate=d=>new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+const qIso=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const QST={draft:['Draft',''],sent:['Sent','w'],accepted:['Accepted',''],declined:['Declined','d']};
+const qStat=q=>(q.status==='draft'||q.status==='sent')&&q.valid&&q.valid<Date.now()-864e5+1?['Expired','d']:(QST[q.status]||QST.draft);
+function qCalc(items,disc,on){const sub=items.reduce((a,l)=>a+lt(l),0),d=Math.min(+disc||0,sub),t=sub-d,k=sub>0?t/sub:0,std=items.filter(l=>!l.tx).reduce((a,l)=>a+lt(l),0)*k;return{sub,d,t,gst:on?std*S.gst/(100+S.gst):0}}
+
+/* ---- GST on/off: turning it off needs the password, and old invoices keep how they were issued ---- */
+document.addEventListener('change',e=>{
+  const t=e.target;if(!t||!t.dataset||t.dataset.tg!=='gstOn')return;
+  e.stopImmediatePropagation();const want=t.checked;t.checked=!want;
+  reauth(want?'Turn GST on? New invoices will show tax invoice and GST lines.':'Stop collecting GST? New invoices will say Invoice and show no GST. Old invoices stay as they were.',()=>{
+    S.gstOn=want;logit(me.name,want?'Turned GST on':'Turned GST off');save();render()});
+},true);
+
+/* ---- Quotation tool ---- */
+let qv='list',qd=null,qfil='all',qs='';
+function quotPage(){qv==='edit'&&qd?quotEdit():quotList()}
+function quotList(){
+  setTop('Quotations',null,`<button class='p' data-qnew>New quotation</button>`);
+  const L=QL(),sq=qs.toLowerCase();
+  const F=[['all','All'],['open','Open'],['accepted','Accepted'],['closed','Declined or expired']];
+  const M=q=>{const s=qStat(q)[0];return qfil==='all'||(qfil==='open'&&(s==='Draft'||s==='Sent'))||(qfil==='accepted'&&s==='Accepted')||(qfil==='closed'&&(s==='Declined'||s==='Expired'))};
+  const R=L.filter(q=>M(q)&&(!sq||(q.no+' '+q.cust+' '+(q.cphone||'')).toLowerCase().includes(sq)));
+  $('#app').innerHTML=`<div style='display:flex;gap:8px;margin-bottom:10px'><input id='qsrch2' placeholder='Search number, customer or phone' value='${esc(qs)}' aria-label='Search quotations'></div>
+  <div class='fch'>${F.map(([k,n])=>`<button class='${qfil===k?'on':''}' data-qfil='${k}'>${n}</button>`).join('')}</div>
+  ${R.length?R.map(q=>{const st=qStat(q),c=qCalc(q.items,q.disc,q.tax!==false);return `<button class='item' style='width:100%;text-align:left' data-qopen='${esc(q.no)}'><div><b>${esc(q.no)}</b> · ${esc(q.cust||'Customer')}<small>${qDate(q.at)}${q.valid?' · valid until '+qDate(q.valid):''}</small></div><div style='text-align:right'><b>${m(c.t)}</b><br><span class='tag ${st[1]}'>${st[0]}</span></div></button>`}).join(''):`<div class='empty'>${L.length?'No quotations match.':'No quotations yet. Tap New quotation to make one for a customer.'}</div>`}`;
+}
+function quotNew(){
+  qd={no:'',at:Date.now(),by:me.name,cust:'',cphone:'',items:[],disc:'',notes:S.qnotes||S.terms||'',valid:Date.now()+14*864e5,status:'draft',tax:gstOn(),rate:gstOn()?S.gst:0,isNew:true};
+  qv='edit';render();
+}
+function quotEdit(){
+  setTop(qd.isNew?'New quotation':'Edit '+qd.no,'data-qback');
+  const dl=S.customers.map(c=>`<option value='${esc(c.name)}'></option>`).join('');
+  $('#app').innerHTML=`<div class='card'><div class='hd'>Customer</div><div class='g2'><div><span class='fl'>Name</span><input data-qf='cust' list='qcl' value='${esc(qd.cust)}' placeholder='Customer or company'><datalist id='qcl'>${dl}</datalist></div><div><span class='fl'>Mobile number</span><input data-qf='cphone' inputmode='tel' value='${esc(qd.cphone||'')}'></div></div><div style='margin-top:12px'><span class='fl'>Valid until</span><input type='date' data-qf='valid' value='${qIso(qd.valid)}'></div></div>
+  <div class='card'><div class='hd'>Items<button class='ghost' data-qadd>Add item</button></div><div id='qlines'></div></div>
+  <div class='card'><div class='g2'><div><span class='fl'>Discount (MVR)</span><input type='number' min='0' step='any' inputmode='decimal' data-qf='disc' value='${esc(qd.disc)}'></div><div></div></div><div style='margin-top:12px'><span class='fl'>Notes and terms</span><textarea data-qf='notes' rows='3' placeholder='e.g. Delivery included. 50% deposit to confirm.'>${esc(qd.notes||'')}</textarea></div><div id='qtot' style='margin-top:12px'></div></div>
+  <div class='two'><button class='p' data-qsave>Save quotation</button><button data-qback>Cancel</button></div>`;
+  quotLines();
+}
+function quotLines(){
+  const el=$('#qlines');if(!el)return;
+  el.innerHTML=qd.items.length?qd.items.map((l,i)=>`<div class='cl' style='align-items:center'><div class='cn'><b>${esc(l.name)}</b><small>${l.unit==='kg'?'per kg':''}${l.tx&&qd.tax?' · no GST':''}</small></div><input style='width:78px' type='number' min='0' step='any' inputmode='decimal' data-ql='${i}:qty' value='${l.qty}' aria-label='Quantity'><input style='width:92px' type='number' min='0' step='any' inputmode='decimal' data-ql='${i}:price' value='${l.price}' aria-label='Price'><b id='ql-${i}' style='min-width:70px;text-align:right'>${m(lt(l))}</b><button class='ib' data-qrm='${i}' aria-label='Remove'>${ic('x')}</button></div>`).join(''):`<div class='empty'>No items yet. Tap Add item.</div>`;
+  quotTot();
+}
+function quotTot(){
+  const el=$('#qtot');if(!el)return;const c=qCalc(qd.items,qd.disc,qd.tax);
+  qd.items.forEach((l,i)=>{const s=document.getElementById('ql-'+i);if(s)s.textContent=m(lt(l))});
+  el.innerHTML=`<div class='row'><span>Subtotal</span><span>${m(c.sub)}</span></div>${c.d?`<div class='row'><span>Discount</span><span>−${m(c.d)}</span></div>`:''}${qd.tax?`<div class='row' style='color:var(--mut)'><span>Total excl. GST</span><span>${m(c.t-c.gst)}</span></div><div class='row' style='color:var(--mut)'><span>GST ${qd.rate}%</span><span>${m(c.gst)}</span></div>`:''}<div class='row' style='font-size:18px'><b>${qd.tax?'Total incl. GST':'Total'}</b><b>${m(c.t)}</b></div>`;
+}
+function qRows(p){
+  const base={id:p.id,cat:p.cat||'',tx:p.tax||''},rows=[];
+  if(p.variants&&p.variants.length){p.variants.forEach((v,vi)=>{const vp=v.price!=null?v.price:p.price;
+    if(v.subs&&v.subs.length)v.subs.forEach((s,si)=>rows.push({label:[p.name,v.name,s.name].filter(Boolean).join(' · '),price:s.price!=null?s.price:vp,line:{...base,vi,si,name:[p.name,v.name,s.name].filter(Boolean).join(' · ')}}));
+    else rows.push({label:p.name+' · '+v.name,price:vp,line:{...base,vi,name:p.name+' · '+v.name}})})}
+  else{rows.push({label:p.name+(p.unit==='kg'?' (per kg)':''),price:p.price,line:{...base,name:p.name,...(p.unit==='kg'?{unit:'kg'}:{})}});
+    (p.packs||[]).forEach(k=>rows.push({label:p.name+' · '+k.name+' ('+k.qty+')',price:k.price,line:{...base,name:p.name+' · '+k.name+' ('+k.qty+')',pk:k.name,pq:k.qty}}))}
+  return rows;
+}
+function quotPicker(){
+  const qq=($('#qsrch')?$('#qsrch').value:'').toLowerCase();
+  const ps=S.products.filter(p=>!qq||(p.name+' '+(p.sku||'')+' '+(p.barcode||'')).toLowerCase().includes(qq)).slice(0,25);
+  const html=ps.flatMap(p=>qRows(p).map(r=>({p,r}))).slice(0,40).map(({p,r})=>`<button data-qpick='${p.id}|${esc(r.label)}'><span>${esc(r.label)}</span><span class='pr'>${m(r.price)}</span></button>`).join('')||`<div class='empty'>No products match.</div>`;
+  const box=$('#qpl');if(box)box.innerHTML=html;
+}
+function quotAddItem(pid,label){
+  const p=S.products.find(x=>String(x.id)===String(pid));if(!p)return;
+  const r=qRows(p).find(x=>x.label===label);if(!r)return;
+  const L=r.line,ex=qd.items.find(x=>x.id===L.id&&x.vi===L.vi&&x.si===L.si&&x.pk===L.pk);
+  if(ex)ex.qty=Math.round((+ex.qty+1)*1000)/1000;else qd.items.push({...L,price:r.price,qty:1});
+  quotLines();
+}
+function quotSave(){
+  if(!qd.items.length){toast('Add at least one item.',1);return}
+  const c=qCalc(qd.items,qd.disc,qd.tax),q={...qd};delete q.isNew;
+  q.cust=(q.cust||'').trim()||'Customer';q.disc=Math.min(+qd.disc||0,c.sub);q.sub=c.sub;q.total=c.t;q.gst=c.gst;
+  q.items=q.items.map(l=>({...l,qty:+l.qty||0,price:+l.price||0})).filter(l=>l.qty>0);
+  if(!q.items.length){toast('Quantities must be above zero.',1);return}
+  if(!q.no)q.no='QUO-'+nextSeq();
+  const L=QL(),i=L.findIndex(x=>x.no===q.no);if(i>=0)L[i]=q;else L.unshift(q);
+  S.qnotes=q.notes;logit(me.name,(i>=0?'Edited quotation ':'Created quotation ')+q.no);save();
+  qv='list';qd=null;render();toast('Quotation '+q.no+' saved');
+}
+function quotOpen(no){
+  const q=QL().find(x=>x.no===no);if(!q)return;const st=qStat(q),c=qCalc(q.items,q.disc,q.tax!==false);
+  $('#m').innerHTML=`<div class='modal'><div><div class='hd'>${esc(q.no)}<button class='ib' data-close aria-label='Close'>${ic('x')}</button></div>
+  <div class='row'><span>Customer</span><b>${esc(q.cust||'')}${q.cphone?' · '+esc(q.cphone):''}</b></div><div class='row'><span>Date</span><b>${qDate(q.at)}</b></div><div class='row'><span>Valid until</span><b>${q.valid?qDate(q.valid):'-'}</b></div><div class='row'><span>Status</span><b><span class='tag ${st[1]}'>${st[0]}</span></b></div>
+  <div style='margin:8px 0'>${q.items.map(l=>`<div class='row'><span>${esc(l.name)} × ${l.unit==='kg'?(+(+l.qty).toFixed(3))+' kg':l.qty}</span><span>${m(lt(l))}</span></div>`).join('')}</div>
+  <div class='row' style='font-size:17px'><b>Total${q.tax!==false?' incl. GST':''}</b><b>${m(c.t)}</b></div>
+  <div class='two' style='margin-top:12px'><button class='p' data-qconv='${esc(q.no)}'>Make a sale</button><button data-qedit='${esc(q.no)}'>Edit</button></div>
+  <div class='two' style='margin-top:8px'><button data-qprint='${esc(q.no)}'>Print</button><button data-qpdf='${esc(q.no)}'>Save PDF</button></div>
+  <span class='fl' style='margin-top:12px'>Mark as</span><div class='two'><button data-qset='${esc(q.no)}|sent'>Sent</button><button data-qset='${esc(q.no)}|accepted'>Accepted</button></div><div class='two' style='margin-top:8px'><button data-qset='${esc(q.no)}|declined'>Declined</button><button class='danger' data-qdel='${esc(q.no)}'>Delete</button></div></div></div>`;
+}
+function quotDoc(q){
+  const on=q.tax!==false,c=qCalc(q.items,q.disc,on);
+  return `<div class='iv'><div class='ivh'><div>${S.logo?`<img src='${S.logo}' style='max-height:60px;max-width:180px;display:block;margin-bottom:6px'>`:''}<h2>${esc(S.shop||'Shop')}</h2>${S.phone?`<div>Tel: ${esc(S.phone)}</div>`:''}<div>${esc(S.addr||'')}</div>${on&&S.tin?`<div>GST TIN: ${esc(S.tin)}</div>`:''}</div><div style='text-align:right'><h2>QUOTATION</h2><div>${esc(q.no)}</div><div>${qDate(q.at)}</div>${q.valid?`<div>Valid until ${qDate(q.valid)}</div>`:''}</div></div><div><b>Prepared for</b><br>${esc(q.cust||'')}${q.cphone?'<br>'+esc(q.cphone):''}</div><table class='ivt'><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr>${q.items.map(l=>`<tr><td>${esc(l.name)}${l.tx&&on?' (no GST)':''}</td><td>${l.unit==='kg'?(+(+l.qty).toFixed(3))+' kg':l.qty}</td><td>${(+l.price).toFixed(2)}${l.unit==='kg'?'/kg':''}</td><td>${lt(l).toFixed(2)}</td></tr>`).join('')}</table><div class='ivs'><div class='row'><span>Subtotal</span><span>${c.sub.toFixed(2)}</span></div>${c.d?`<div class='row'><span>Discount</span><span>-${c.d.toFixed(2)}</span></div>`:''}${on?`<div class='row'><span>Total excl. GST</span><span>${(c.t-c.gst).toFixed(2)}</span></div><div class='row'><span>GST ${q.rate!=null?q.rate:S.gst}%</span><span>${c.gst.toFixed(2)}</span></div>`:''}<div class='row' style='font-size:16px'><b>${on?'Total incl. GST (MVR)':'Total (MVR)'}</b><b>${c.t.toFixed(2)}</b></div></div>${q.notes?`<p style='margin-top:18px;white-space:pre-wrap'><b>Notes and terms</b><br>${esc(q.notes)}</p>`:''}<p style='margin-top:18px'>This is a quotation, not a tax receipt. Prices are in Rufiyaa.</p><p style='text-align:center;margin-top:24px'>${esc(S.footer||'Thank you for your business.')}</p></div>`;
+}
+function quotPrint(q){
+  let st=document.getElementById('pgst');if(!st){st=document.createElement('style');st.id='pgst';document.head.appendChild(st)}
+  st.textContent='@page{size:A4 portrait;margin:12mm}';
+  let pa=document.getElementById('pa');if(!pa){pa=document.createElement('div');pa.id='pa';document.body.appendChild(pa)}
+  pa.className='fa4';pa.innerHTML=quotDoc(q);setTimeout(()=>{try{window.print()}catch(e){toast('Printing is not available here. Use Save PDF instead.',1)}},80);
+}
+async function quotPdf(q){
+  const J=window.jspdf&&window.jspdf.jsPDF;if(!J){toast('PDF tools did not load. Check your connection and try again.',1);return}
+  const on=q.tax!==false,c=qCalc(q.items,q.disc,on),f2=x=>(+x).toFixed(2),doc=new J({unit:'mm',format:'a4',orientation:'portrait'});
+  const pw=doc.internal.pageSize.getWidth(),ph=doc.internal.pageSize.getHeight(),M=16,R=pw-M;let y=M+4;
+  const T=(t,x,yy,o)=>doc.text(pdfTxt(String(t)),x,yy,o);
+  doc.setFont('helvetica','bold');doc.setFontSize(18);T(S.shop||'Quotation',M,y);doc.setFontSize(14);T('QUOTATION',R,y,{align:'right'});y+=6;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);let y2=y;
+  if(S.phone){T('Tel: '+S.phone,M,y2);y2+=4.5}if(S.addr){T(S.addr,M,y2);y2+=4.5}if(on&&S.tin){T('GST TIN: '+S.tin,M,y2);y2+=4.5}
+  T(q.no,R,y,{align:'right'});T(qDate(q.at),R,y+4.5,{align:'right'});if(q.valid)T('Valid until '+qDate(q.valid),R,y+9,{align:'right'});y=Math.max(y2,y+13)+3;
+  doc.setDrawColor(40);doc.line(M,y,R,y);y+=7;doc.setFont('helvetica','bold');T('Prepared for',M,y);doc.setFont('helvetica','normal');y+=5;T(q.cust||'',M,y);if(q.cphone){y+=4.5;T(q.cphone,M,y)}y+=9;
+  const cx=[M,R-62,R-34,R],head=()=>{doc.setFillColor(238);doc.rect(M,y-4.5,R-M,7,'F');doc.setFont('helvetica','bold');T('Item',cx[0]+1.5,y);T('Qty',cx[1],y,{align:'right'});T('Price',cx[2],y,{align:'right'});T('Amount',cx[3]-1.5,y,{align:'right'});doc.setFont('helvetica','normal');y+=7};
+  head();
+  q.items.forEach(l=>{const w=doc.splitTextToSize(pdfTxt(l.name+(l.tx&&on?' (no GST)':'')),cx[1]-M-22),h=Math.max(1,w.length)*4.6+2;if(y+h>ph-60){doc.addPage();y=M+6;head()}
+    w.forEach((s,k)=>doc.text(s,cx[0]+1.5,y+k*4.6));T(l.unit==='kg'?(+(+l.qty).toFixed(3))+' kg':String(l.qty),cx[1],y,{align:'right'});T(f2(l.price)+(l.unit==='kg'?'/kg':''),cx[2],y,{align:'right'});T(f2(lt(l)),cx[3]-1.5,y,{align:'right'});y+=h;doc.setDrawColor(210);doc.line(M,y-3,R,y-3)});
+  if(y>ph-70){doc.addPage();y=M+6}y+=4;
+  const lx=R-70,row=(a,b,bold)=>{doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(bold?11:9);T(a,lx,y);T(b,R,y,{align:'right'});y+=bold?7:5};
+  row('Subtotal',f2(c.sub));if(c.d)row('Discount','-'+f2(c.d));if(on){row('Total excl. GST',f2(c.t-c.gst));row('GST '+(q.rate!=null?q.rate:S.gst)+'%',f2(c.gst))}row(on?'Total incl. GST (MVR)':'Total (MVR)',f2(c.t),1);
+  if(q.notes){doc.setFont('helvetica','bold');doc.setFontSize(9);y+=4;T('Notes and terms',M,y);y+=5;doc.setFont('helvetica','normal');doc.splitTextToSize(pdfTxt(q.notes),R-M).forEach(s=>{if(y>ph-24){doc.addPage();y=M+6}doc.text(s,M,y);y+=4.5})}
+  doc.setFontSize(9);T('This is a quotation, not a tax receipt.',pw/2,ph-M-5,{align:'center'});T(S.footer||'Thank you for your business.',pw/2,ph-M,{align:'center'});
+  const buf=doc.output('arraybuffer'),name=q.no+'.pdf';
+  try{const dl=window.claude&&await claude.use('downloads');if(dl){await dl.save({filename:name,data:buf});return}
+    const u=URL.createObjectURL(new Blob([buf],{type:'application/pdf'})),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}catch(e){if(!e||e.code!=='declined')toast('Could not save the PDF.',1)}
+}
+function quotConvert(q){
+  newCartTab();
+  q.items.forEach(l=>{const p=S.products.find(x=>x.id===l.id);cart.push({...l,cost:l.pq?((p&&p.cost)||0)*l.pq:((p&&p.cost)||0),qty:+l.qty,price:+l.price})});
+  const c=S.customers.find(x=>x.name===q.cust);cu=c?c.id:'';disc=q.disc?String(q.disc):'';
+  q.status='accepted';q.convAt=Date.now();save();
+  tab='pos';usv='items';$('#m').innerHTML='';render();toast('Quotation loaded as a sale. Check it and take payment.');
+}
+document.addEventListener('input',e=>{
+  const t=e.target;if(!t||!t.dataset)return;
+  if(t.id==='qsrch'){quotPicker();return}
+  if(t.id==='qsrch2'){qs=t.value.trim();const pos=t.selectionStart;quotList();const n=$('#qsrch2');if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(x){}}return}
+  if(!qd)return;
+  if(t.dataset.qf){const k=t.dataset.qf;qd[k]=k==='valid'?(t.value?new Date(t.value+'T23:59:00').getTime():null):t.value;if(k==='disc')quotTot();
+    if(k==='cust'){const c=S.customers.find(x=>x.name===t.value);if(c&&c.phone&&!qd.cphone){qd.cphone=c.phone;const p=document.querySelector('[data-qf=cphone]');if(p)p.value=c.phone}}return}
+  if(t.dataset.ql){const[i,k]=t.dataset.ql.split(':');if(qd.items[+i]){qd.items[+i][k]=t.value===''?'':+t.value;quotTot()}}
+});
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('button');if(!b||!b.dataset)return;const d=b.dataset;
+  const stop=()=>{e.stopImmediatePropagation();e.preventDefault()},qf=no=>QL().find(x=>x.no===no);
+  if('qnew' in d){stop();quotNew();return}
+  if('qback' in d){stop();qv='list';qd=null;render();return}
+  if(d.qfil){stop();qfil=d.qfil;quotList();return}
+  if(d.qopen){stop();quotOpen(d.qopen);return}
+  if('qadd' in d){stop();$('#m').innerHTML=`<div class='modal'><div><div class='hd'>Add item<button class='ib' data-close aria-label='Close'>${ic('x')}</button></div><input id='qsrch' placeholder='Search products' autocomplete='off'><div class='list' id='qpl' style='margin-top:10px;max-height:50vh;overflow:auto'></div></div></div>`;quotPicker();setTimeout(()=>{const s=$('#qsrch');if(s)s.focus()},50);return}
+  if(d.qpick){stop();const i=d.qpick.indexOf('|');quotAddItem(d.qpick.slice(0,i),d.qpick.slice(i+1));toast('Added');return}
+  if(d.qrm!==undefined){stop();qd.items.splice(+d.qrm,1);quotLines();return}
+  if('qsave' in d){stop();quotSave();return}
+  if(d.qedit){stop();const q=qf(d.qedit);if(!q)return;qd=JSON.parse(JSON.stringify(q));qv='edit';$('#m').innerHTML='';render();return}
+  if(d.qprint){stop();const q=qf(d.qprint);if(q){$('#m').innerHTML='';quotPrint(q)}return}
+  if(d.qpdf){stop();const q=qf(d.qpdf);if(q)quotPdf(q);return}
+  if(d.qconv){stop();const q=qf(d.qconv);if(q)quotConvert(q);return}
+  if(d.qset){stop();const[no,s]=d.qset.split('|'),q=qf(no);if(q){q.status=s;logit(me.name,'Marked quotation '+no+' as '+s);save();$('#m').innerHTML='';quotList();toast('Marked as '+s)}return}
+  if(d.qdel){stop();$('#m').innerHTML=`<div class='modal'><div><div class='hd'>Delete ${esc(d.qdel)}?</div><p class='sub'>This removes the quotation for everyone. It cannot be undone.</p><div class='two'><button class='p danger' data-qdel2='${esc(d.qdel)}'>Delete</button><button data-close>Cancel</button></div></div></div>`;return}
+  if(d.qdel2){stop();const L=QL(),i=L.findIndex(x=>x.no===d.qdel2);if(i>=0){L.splice(i,1);logit(me.name,'Deleted quotation '+d.qdel2);save()}$('#m').innerHTML='';quotList();return}
+},true);
+
+/* ---- Receipt options: who served, customer balance, terms, logo, payment QR ---- */
+const rcBal=i=>{const c=i&&i.cid?S.customers.find(x=>x.id==i.cid):null;return S.rcBal&&c&&c.bal>0.005?c.bal:0};
+const rcBalRow=i=>{const b=rcBal(i);return b?`<div class='row'><span>Customer balance owing</span><span>${b.toFixed(2)}</span></div>`:''};
+const imgFmt=u=>/^data:image\/jpe?g/i.test(u)?'JPEG':'PNG';
+function pdfExtras(doc,y,M,R,pw,ph,T){
+  let yy=y+6;
+  if(S.terms){doc.setFont('helvetica','bold');doc.setFontSize(8.5);T('Terms and conditions',M,yy);yy+=4.5;doc.setFont('helvetica','normal');
+    doc.splitTextToSize(pdfTxt(S.terms),R-M-(S.payqr?34:0)).forEach(s=>{if(yy<ph-26){doc.text(s,M,yy);yy+=4}})}
+  if(S.payqr){try{const qy=ph-M-44;doc.addImage(S.payqr,imgFmt(S.payqr),R-28,qy,26,26);doc.setFontSize(8);T('Scan to pay',R-15,qy+30,{align:'center'})}catch(e){}}
+}
+function shrinkImage(file,maxW,maxH){
+  return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej(new Error('Could not read the image'));
+    fr.onload=()=>{const im=new Image();im.onerror=()=>rej(new Error('That file is not a picture'));
+      im.onload=()=>{const k=Math.min(1,maxW/im.width,maxH/im.height),w=Math.max(1,Math.round(im.width*k)),h=Math.max(1,Math.round(im.height*k)),c=document.createElement('canvas');c.width=w;c.height=h;
+        const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);
+        let u=c.toDataURL('image/png');if(u.length>180000)u=c.toDataURL('image/jpeg',0.85);
+        if(u.length>260000)return rej(new Error('That picture is too detailed. Use a simpler one.'));res({u,r:h/w})};im.src=fr.result};fr.readAsDataURL(file)});
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('button');if(!b||!b.dataset)return;const d=b.dataset;
+  if(d.imgpick){e.stopImmediatePropagation();e.preventDefault();window.__imgk=d.imgpick;const f=$('#imgf');if(f)f.click();return}
+  if(d.imgrm){e.stopImmediatePropagation();e.preventDefault();delete S[d.imgrm];if(d.imgrm==='logo')delete S.logoR;save();render();return}
+},true);
+document.addEventListener('change',async e=>{
+  const t=e.target;if(!t||t.id!=='imgf'||!t.files||!t.files[0])return;
+  const f=t.files[0],k=window.__imgk;t.value='';
+  try{const r=await shrinkImage(f,k==='logo'?360:300,k==='logo'?140:300);S[k]=r.u;if(k==='logo')S.logoR=r.r;save();render();toast(k==='logo'?'Logo saved':'Payment QR saved')}catch(x){toast(x.message||'Could not use that picture.',1)}
+},true);
+
+/* ---- Activity log page (managers) ---- */
+let alu='',alq='';
+function actPage(){
+  setTop('Activity log');
+  const L=S.log||[],us=[...new Set(L.map(x=>x.by).filter(Boolean))],q=alq.toLowerCase();
+  const R=L.filter(x=>(!alu||x.by===alu)&&(!q||String(x.msg).toLowerCase().includes(q)));
+  $('#app').innerHTML=`<p class='sub'>The last ${L.length} changes made in this shop: who did what, and when.</p><div style='display:flex;gap:8px;margin-bottom:10px'><input id='alq' placeholder='Search' value='${esc(alq)}' aria-label='Search activity'><select id='alu' style='width:auto' aria-label='Filter by person'><option value=''>Everyone</option>${us.map(u=>`<option ${alu===u?'selected':''}>${esc(u)}</option>`).join('')}</select></div>
+  <div class='card' style='padding:6px 16px'>${R.length?R.map(x=>`<div class='item'><div>${esc(x.msg)}<small>${esc(x.by||'')} · ${dlabel(x.at)}</small></div></div>`).join(''):`<div class='empty'>Nothing to show.</div>`}</div>`;
+}
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='alq'){alq=t.value.trim();const p=t.selectionStart;actPage();const n=$('#alq');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(x){}}}});
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.id==='alu'){alu=t.value;actPage()}});
 
 if(CLOUD)cloudBoot();else render();
 </script>
