@@ -2147,6 +2147,8 @@ function diagShow(){
   const hints=[];
   if(CFG.supabaseUrl&&!window.supabase)hints.push('The sign-in library did not load. An ad blocker, Brave Shields or a network filter may be blocking cdn.jsdelivr.net. Turn shields off for this site and reload.');
   if(CFG.supabaseUrl&&!/^https:\/\/[a-z0-9]+\.supabase\.co\/?$/.test(CFG.supabaseUrl.trim()))hints.push('SUPABASE_URL looks wrong. It must look like https://abcdxyz.supabase.co with nothing after .co.');
+  if(/sb_secret_|service_role/.test(CFG.supabaseAnonKey||''))hints.push('SUPABASE_ANON_KEY is a secret key. Replace it with the public anon key and rotate the secret key in Supabase.');
+  if(/^sb_/.test(CFG.supabaseUrl||''))hints.push('SUPABASE_URL contains a key. It must be the Project URL ending in .supabase.co.');
   if(CFG.supabaseAnonKey&&CFG.supabaseAnonKey.split('.').length!==3&&!/^sb_publishable_/.test(CFG.supabaseAnonKey))hints.push('SUPABASE_ANON_KEY does not look like a Supabase anon key.');
   a.innerHTML=`<div style='max-width:560px;margin:60px auto;padding:0 16px;line-height:1.5'><h2>The app could not start</h2>${hints.map(h=>`<p>${esc(h)}</p>`).join('')}${__errs.length?`<p style='opacity:.8'>Error: ${esc(__errs.slice(0,3).join(' | '))}</p>`:''}<p style='opacity:.7'>Fix the setting in Vercel, then redeploy. If this keeps happening, send this message to support.</p><button onclick='location.reload()'>Reload</button></div>`;
 }
