@@ -1597,19 +1597,19 @@ const shopPayload=()=>{const st={};Object.keys(S).forEach(k=>{if(!LOCAL_ONLY.has
 const errMsg=e=>{const m=(e&&(e.message||e.error_description||e.msg))||String(e||'Something went wrong');
   if(/load failed|failed to fetch|networkerror|fetch failed/i.test(m)){let h='';try{h=new URL(CFG.supabaseUrl).host}catch(x){}return 'Cannot reach the server'+(h?' ('+h+')':'')+'. Check your internet. If this keeps happening the SUPABASE_URL setting in Vercel is probably wrong.'}
   return m};
-const isNet=e=>/failed to fetch|networkerror|network request|load failed|fetch/i.test(errMsg(e))||(e&&e.status===0);
+const isNet=e=>{const m=String((e&&(e.message||e.error_description||e.msg))||e||'');return /failed to fetch|networkerror|network request|load failed|fetch|cannot reach the server/i.test(m)||!!(e&&e.status===0)};
 Object.assign(cl,{mode:'home',loading:false,err:'',shop:null,uid:null,admin:false,snap:{},pools:[],dirty:false,busy:false,again:false,timer:null,lastSync:'',ch:null});
 
 function pill(st){
   let p=document.getElementById('syncp');if(!p){p=document.createElement('div');p.id='syncp';document.body.appendChild(p)}
   if(!cl.shop||!me){p.style.display='none';return}
   p.style.display='';p.className=st;
-  p.textContent=st==='saving'?'Saving…':st==='offline'?'Offline. Changes will sync when you reconnect. Keep this page open.':'All changes saved';
+  p.textContent=st==='saving'?'Saving…':st==='offline'?'Offline. Your work is saved on this device and will sync when you are back online.':'All changes saved';
 }
 function cloudSaved(){
   try{localStorage.setItem('atoll_theme',S.theme||'')}catch(e){}
   if(!cl.shop||!me)return;
-  cl.dirty=true;clearTimeout(cl.timer);cl.timer=setTimeout(cloudPush,500);pill('saving');
+  cl.dirty=true;clearTimeout(cl.timer);cl.timer=setTimeout(cloudPush,500);pill('saving');offSave();
 }
 window.addEventListener('beforeunload',e=>{if(CLOUD&&(cl.dirty||cl.busy)){e.preventDefault();e.returnValue=''}});
 
@@ -1702,7 +1702,7 @@ async function cloudPush(retry){
         if(r.error)throw r.error;ch.forEach(id=>{delete sn[id]})}
     }
     if(mgr()){const sp=shopPayload(),c=cj(sp);if(c!==cl.snap.shop){const r=await sbc.from('shops').update(sp).eq('id',cl.shop);if(r.error)throw r.error;cl.snap.shop=c}}
-    cl.dirty=false;pill('synced');
+    cl.dirty=false;pill('synced');offSave();
   }catch(e){
     if(isNet(e)){pill('offline');clearTimeout(cl.timer);cl.timer=setTimeout(cloudPush,5000)}
     else if(!retry&&/jwt|401|expired/i.test(errMsg(e))){try{await sbc.auth.refreshSession()}catch(x){}cl.busy=false;return cloudPush(true)}
@@ -1766,10 +1766,11 @@ async function cloudBoot(){
   if(/type=recovery/.test(location.hash))cl.mode='newpw';
   cl.loading=true;render();
   try{
+    if(!navigator.onLine&&await offBoot())return;
     const r=await sbc.auth.getSession();
     if(r.data&&r.data.session&&cl.mode!=='newpw')await cloudEnter(r.data.session.user);
-    else{cl.loading=false;render()}
-  }catch(e){cl.loading=false;cl.err=errMsg(e);render()}
+    else{if(!(r.data&&r.data.session)&&(isNet(r.error||{})||!navigator.onLine)&&await offBoot())return;cl.loading=false;render()}
+  }catch(e){if(isNet(e)&&await offBoot())return;cl.loading=false;cl.err=errMsg(e);render()}
 }
 async function cloudEnter(user){
   cl.uid=user.id;cl.email=user.email||'';cl.loading=true;cl.err='';render();
@@ -1787,6 +1788,7 @@ async function cloudEnter(user){
     if(mem.data.length===1){await cloudOpenShop(mem.data[0].shop_id);return}
     await cloudShowPicker(mem.data);
   }catch(e){
+    if(isNet(e)&&await offBoot())return;
     cl.loading=false;cl.err=errMsg(e);cl.shop=null;me=null;
     try{await sbc.auth.signOut()}catch(x){}
     cl.mode='in';render();
@@ -1799,11 +1801,11 @@ async function cloudShowPicker(mem){
 }
 async function cloudOpenShop(id){
   cl.loading=true;cl.shop=id;render();
-  poolLoad();await cloudPull();
+  poolLoad();await offPrePush();await cloudPull();
   if(!me)throw new Error('Your access to this shop was removed.');
   if(S.status!=='active')throw new Error('This shop subscription is suspended. Please contact support.');
   if(!cl.pools.length)await claimNums();
-  cloudSubscribe();idleStart();cl.loading=false;tab='ov';uiRestore();render();uiDrafts();pill('synced');
+  cloudSubscribe();idleStart();cl.loading=false;tab='ov';uiRestore();render();uiDrafts();pill('synced');offSave();
 }
 async function cloudTryOpen(id){
   try{await cloudOpenShop(id)}
@@ -1832,7 +1834,7 @@ async function cloudSwitch(){
   catch(e){cl.loading=false;cl.err=errMsg(e);cl.mode='in';render()}
 }
 async function cloudOut(msg,everywhere){
-  cloudTeardown();
+  offClear(cl.shop);cloudTeardown();
   try{await sbc.auth.signOut(everywhere?{scope:'global'}:undefined)}catch(e){}
   Object.assign(cl,{uid:null,admin:false,shops:null,mode:msg?'in':'home',err:msg||'',vals:{}});
   adm=false;render();
@@ -2494,6 +2496,70 @@ function uiDrafts(){
   ['input','change','click'].forEach(ev=>document.addEventListener(ev,uiSave,true));
   addEventListener('pagehide',uiSnap);document.addEventListener('visibilitychange',()=>{if(document.hidden)uiSnap()});
 })();
+
+/* ---- Offline: keep working with no internet; sync when the connection returns ---- */
+const OFFK='atoll_last';
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('atoll_off',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function idbGet(k){try{const d=await idb();return await new Promise((res,rej)=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}catch(e){return null}}
+async function idbPut(k,v){try{const d=await idb();await new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}}
+async function idbDel(k){try{const d=await idb();await new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}}
+let offT=0;
+function offSave(){if(!CLOUD||!cl.shop||!me||isShared())return;clearTimeout(offT);offT=setTimeout(offWrite,1000)}
+async function offWrite(){
+  if(!CLOUD||!cl.shop||!me||isShared())return;
+  const at=cl.offline?(cl.lastOnline||Date.now()):Date.now();
+  try{localStorage.setItem(OFFK,JSON.stringify({uid:cl.uid,email:cl.email,shop:cl.shop,at}))}catch(e){}
+  await idbPut('shop_'+cl.shop,{uid:cl.uid,email:cl.email,shop:cl.shop,at,dirty:!!cl.dirty,S,snap:cl.snap,lastSync:cl.lastSync});
+}
+function offClear(shop){
+  try{localStorage.removeItem(OFFK)}catch(e){}
+  if(shop)idbDel('shop_'+shop);
+  clearInterval(cl.offT2);cl.offline=false;
+}
+async function offBoot(){
+  if(isShared())return false;
+  let last=null;try{last=JSON.parse(localStorage.getItem(OFFK)||'null')}catch(e){}
+  if(!last||Date.now()-last.at>14*864e5)return false;
+  const c=await idbGet('shop_'+last.shop);if(!c||c.uid!==last.uid||!c.S)return false;
+  const keep=[S,cl.snap,cl.shop,cl.uid,cl.email];
+  Object.assign(cl,{uid:c.uid,email:c.email,shop:c.shop,snap:c.snap||{},lastSync:c.lastSync||'',dirty:!!c.dirty,offline:true,lastOnline:c.at,loading:false,err:''});
+  S=Object.assign(blankS(),c.S);me=S.users.find(u=>u.uid===cl.uid)||null;
+  if(!me){S=keep[0];cl.snap=keep[1];cl.shop=keep[2];cl.uid=keep[3];cl.email=keep[4];cl.offline=false;return false}
+  poolLoad();tab='ov';uiRestore();render();uiDrafts();pill('offline');
+  clearInterval(cl.offT2);cl.offT2=setInterval(offTryOnline,10000);
+  return true;
+}
+async function offPrePush(){
+  if(isShared())return;
+  const c=await idbGet('shop_'+cl.shop);if(!c||c.uid!==cl.uid||!c.dirty||!c.S)return;
+  S=Object.assign(blankS(),c.S);cl.snap=c.snap||{};cl.lastSync=c.lastSync||'';
+  me=S.users.find(u=>u.uid===cl.uid)||null;if(!me)return;
+  cl.dirty=true;await cloudPush();
+  if(cl.dirty)throw new Error('Failed to fetch');
+}
+async function offTryOnline(){
+  if(!cl.offline||cl.offBusy)return;cl.offBusy=true;
+  try{
+    const r=await sbc.auth.getSession();
+    if(!r.data||!r.data.session){
+      const t=await fetch(CFG.supabaseUrl+'/auth/v1/health',{cache:'no-store'}).catch(()=>null);
+      if(t)await cloudOut('Please sign in again.');
+      return;
+    }
+    const p=await sbc.rpc('am_i_admin');
+    if(p.error){if(!isNet(p.error))await cloudOut('Please sign in again.');return}
+    if(cl.dirty){cl.dirty=true;await cloudPush();if(cl.dirty)return}
+    await pullMeta();
+    if(!me){await cloudOut('Your access to this shop was removed.');return}
+    if(S.status!=='active'){await cloudOut('This shop subscription is suspended. Please contact support.');return}
+    await pullRecords();
+    clearInterval(cl.offT2);cl.offline=false;cloudSubscribe();pill('synced');softRender(true);offSave();
+    toast('Back online. Everything is saved.');
+  }catch(e){}finally{cl.offBusy=false}
+}
+addEventListener('online',()=>{if(CLOUD&&cl.offline)offTryOnline()});
+if('serviceWorker' in navigator&&/^https:$|^http:$/.test(location.protocol)&&(location.protocol==='https:'||location.hostname==='localhost'))
+  addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{})});
 
 if(CLOUD)cloudBoot();else render();
 </script>
