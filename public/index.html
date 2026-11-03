@@ -896,7 +896,7 @@ function teamBase(){
   ${b.ex?`<div class='row'><span>${b.ex} extra user${b.ex>1?'s':''} × ${m(b.p.x)}</span><span>${m(b.ex*b.p.x)}</span></div>`:''}
   <div class='due'><span>Monthly total</span><b style='font-size:26px'>${m(b.tot)}</b></div><p class='sub' style='margin:6px 0 0;font-size:13px'>Renews ${ren}.${own?'':' Only the owner can change the plan.'}</p></div>
   <div class='card'><div class='hd'>What is in each plan</div><div class='g2'><div><b>Basic</b><p class='sub' style='margin:6px 0 0'>Point of sale, up to 3,000 products, barcodes, invoices, cashbook, refunds and credit notes, customer credit, user roles, sales reports (daily, products, customers, stock, cashbook, refunds), Excel product import, pack sizes (case and single), thermal and A4/A5 printing.</p></div><div><b>Pro</b><p class='sub' style='margin:6px 0 0'>Everything in Basic, plus unlimited products, variants and sub-variants, profit and full GST reports for MIRA (input and output tax), suppliers and purchase orders, cash registers with shift counts and cost prices.</p></div></div></div>
-  <div class='card'><div class='hd'>Users</div>${S.users.map(u=>`<div class='item'><div>${esc(u.name)}${u.id===me.id?' (you)':''}<small><span class='tag ${u.role==='cashier'?'d':''}'>${ROLE[u.role]}</span>${u.role==='cashier'?' '+u.perms.length+' of '+PERMS.length+' permissions':''}</small></div><div style='display:flex;gap:8px'>${u.role!=='owner'||own?`<button class='ghost' data-perm='${u.id}'>Edit</button>`:''}${u.role!=='owner'&&u.id!==me.id?`<button class='ghost danger' data-del='${u.id}'>Remove</button>`:''}</div></div>`).join('')}</div>
+  <div class='card'><div class='hd'>Users</div>${S.users.map(u=>`<div class='item'><div>${esc(u.name)}${u.id===me.id?' (you)':''}<small><span class='tag ${u.role==='cashier'?'d':''}'>${ROLE[u.role]}</span>${u.role==='cashier'?' '+u.perms.length+' of '+PERMS.length+' permissions':''}${staffUser(u)?`<br>Username: <b>${esc(staffUser(u))}</b>`:''}</small></div><div style='display:flex;gap:8px'>${u.role!=='owner'||own?`<button class='ghost' data-perm='${u.id}'>Edit</button>`:''}${u.role!=='owner'&&u.id!==me.id?`<button class='ghost danger' data-del='${u.id}'>Remove</button>`:''}</div></div>`).join('')}</div>
   ${CLOUD?cloudAddUser(b):`<div class='card'><div class='hd'>Add user</div><div class='add'><input id='un' placeholder='Name'><input id='up' type='password' placeholder='Password (8+ characters)' autocomplete='new-password'><select id='ur'><option value='cashier'>Cashier</option><option value='full'>Full access</option></select></div><p id='ue' class='out' style='margin:8px 0 0'></p><p class='sub' style='font-size:13px;margin:6px 0 0'>${S.users.length>=b.p.inc?'Adding a user costs '+m(b.p.x)+' per month.':(b.p.inc-S.users.length)+' included seat left.'}</p><button class='go' data-adduser>Add user</button></div>`}`;
 }
 function permModal(id){
@@ -1633,6 +1633,7 @@ function nextSeq(){
 /* ---------- loading data ---------- */
 const slugN=x=>String(x||'').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g,'');
 const staffEmail=(nm,shop)=>slugN(nm)+'.'+slugN(shop)+'@staff.example.com';
+const staffUser=u=>CLOUD&&u&&u.role!=='owner'?slugN(u.name)+'.'+(cl.slug||slugN(S.shop)):'';
 async function pullMeta(){
   const [a,b,c]=await Promise.all([
     sbc.from('shops').select('*').eq('id',cl.shop).single(),
@@ -1802,7 +1803,7 @@ async function cloudOpenShop(id){
   if(!me)throw new Error('Your access to this shop was removed.');
   if(S.status!=='active')throw new Error('This shop subscription is suspended. Please contact support.');
   if(!cl.pools.length)await claimNums();
-  cloudSubscribe();idleStart();cl.loading=false;tab='ov';render();pill('synced');
+  cloudSubscribe();idleStart();cl.loading=false;tab='ov';uiRestore();render();uiDrafts();pill('synced');
 }
 async function cloudTryOpen(id){
   try{await cloudOpenShop(id)}
@@ -1823,7 +1824,7 @@ function cloudTeardown(){
   clearTimeout(cl.timer);clearInterval(cl.poll);
   if(cl.ch){try{sbc.removeChannel(cl.ch)}catch(e){}cl.ch=null}
   Object.assign(cl,{shop:null,snap:{},pools:[],dirty:false,busy:false,lastSync:''});
-  S=blankS();me=null;cart=[];carts=[{n:1,cart:[],cu:'',disc:'',reason:''}];acx=0;usv='items';tab='ov';const mm=$('#m');if(mm)mm.innerHTML='';pill('synced');
+  uiClear();S=blankS();me=null;cart=[];carts=[{n:1,cart:[],cu:'',disc:'',reason:''}];acx=0;usv='items';tab='ov';const mm=$('#m');if(mm)mm.innerHTML='';pill('synced');
 }
 async function cloudSwitch(){
   cloudTeardown();cl.loading=true;cl.err='';render();
@@ -1845,9 +1846,9 @@ function cloudLogin(){
   const gbtn=`<p class='sub' style='text-align:center;margin:12px 0 4px'>or</p><button class='ghost' style='width:100%;min-height:48px' data-cl-google>Continue with Google</button>`;
   const back=`<p class='sub' style='text-align:center'>${link('home','Back')}</p>`;
   let h;
-  if(m0==='home')h=landing(`<button class='go' data-cl-mode='up'>Sign up</button><button class='ghost' style='width:100%;margin-top:10px;min-height:48px' data-cl-mode='in'>Log in</button><p class='sub' style='text-align:center;margin:14px 0 0'>${link('staff','I am staff: sign in with my shop name')}</p>`,er);
+  if(m0==='home')h=landing(`<button class='go' data-cl-mode='up'>Sign up</button><button class='ghost' style='width:100%;margin-top:10px;min-height:48px' data-cl-mode='in'>Log in</button><p class='sub' style='text-align:center;margin:14px 0 0'>${link('staff','I am staff: sign in with my username')}</p>`,er);
   else if(m0==='up')h=`<h1>Create your <i>shop.</i></h1><p class='sub'>The owner signs up with an email address. You will confirm it from your inbox.</p><div class='card' data-clform>${f('cl-sn','Shop name','text','Atoll Mart')}${f('cl-on','Your name','text','Owner name')}${f('cl-e','Email','email','you@example.com','autocomplete=email inputmode=email')}${f('cl-p','Password (8 or more characters)','password','','autocomplete=new-password')}<p class='sub' style='font-size:12.5px;margin:10px 0 0'>You will use this password to log in and to confirm important changes such as refunds and removing users. Product names, barcodes and categories you add go into our shared product catalogue (never prices, costs or stock).</p>${er}<button class='go' data-cl-up>Create account</button>${gbtn}</div><p class='sub' style='text-align:center'>${link('in','I already have an account')} \u00b7 ${link('home','Back')}</p>`;
-  else if(m0==='staff')h=`<h1>Staff <i>sign in.</i></h1><p class='sub'>Use the shop name, your name and the password your manager gave you.</p><div class='card' data-clform>${f('cl-sh','Shop name','text','e.g. Atoll Mart','autocomplete=off')}${f('cl-sname','Your name','text','Your name','autocomplete=username')}${f('cl-p','Password','password','','autocomplete=current-password')}<label class='chk' style='border:0;margin-top:10px'><input type='checkbox' id='cl-shared' ${isShared()?'checked':''}>This is a shared computer. Sign me out when I close the tab, and after 20 idle minutes.</label>${er}<button class='go' data-cl-staff>Sign in</button></div><p class='sub' style='text-align:center'>${link('in','Shop owner log in')} \u00b7 ${link('home','Back')}</p>`;
+  else if(m0==='staff')h=`<h1>Staff <i>sign in.</i></h1><p class='sub'>Your username is your name, a dot, then the shop name, like <b>raamih.icart</b>. Your manager gives you the password.</p><div class='card' data-clform>${f('cl-sname','Username','text','name.shop  (for example raamih.icart)','autocomplete=username autocapitalize=none autocorrect=off spellcheck=false')}${f('cl-p','Password','password','','autocomplete=current-password')}<label class='chk' style='border:0;margin-top:10px'><input type='checkbox' id='cl-shared' ${isShared()?'checked':''}>This is a shared computer. Sign me out when I close the tab, and after 20 idle minutes.</label>${er}<button class='go' data-cl-staff>Sign in</button></div><p class='sub' style='text-align:center'>${link('in','Shop owner log in')} \u00b7 ${link('home','Back')}</p>`;
   else if(m0==='check')h=`<h1>Check your <i>email.</i></h1><div class='card'><p class='sub' style='margin:0'>We sent a confirmation link to your email address. Open it, then sign in here and your shop will be created.</p></div><p class='sub' style='text-align:center'>${link('in','Back to sign in')}</p>`;
   else if(m0==='forgot')h=`<h1>Reset your <i>password.</i></h1><div class='card' data-clform>${f('cl-e','Email','email','you@example.com','autocomplete=email')}${er}<button class='go' data-cl-forgot>Send reset link</button></div><p class='sub' style='text-align:center'>${link('in','Back to sign in')}</p>`;
   else if(m0==='newpw')h=`<h1>Choose a new <i>password.</i></h1><div class='card' data-clform>${f('cl-p','New password (8 or more characters)','password','','autocomplete=new-password')}${er}<button class='go' data-cl-newpw>Save password</button></div>`;
@@ -1857,7 +1858,7 @@ function cloudLogin(){
   $('#app').innerHTML=h;
 }
 const gv=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
-function clErr(t){cl.vals={'cl-e':gv('cl-e'),'cl-sn':gv('cl-sn'),'cl-on':gv('cl-on'),'cl-sh':gv('cl-sh'),'cl-sname':gv('cl-sname')};cl.err=t;cloudLogin()}
+function clErr(t){cl.vals={'cl-e':gv('cl-e'),'cl-sn':gv('cl-sn'),'cl-on':gv('cl-on'),'cl-sname':gv('cl-sname')};cl.err=t;cloudLogin()}
 async function clBusy(btn,fn){if(btn)btn.disabled=true;try{await fn()}catch(e){clErr(nice(errMsg(e)))}finally{if(btn)btn.disabled=false}}
 
 document.addEventListener('keydown',e=>{if(!CLOUD||e.key!=='Enter'||!e.target.closest||!e.target.closest('[data-clform]'))return;const b=document.querySelector('[data-clform] .go');if(b)b.click()});
@@ -1873,9 +1874,10 @@ document.addEventListener('click',e=>{
     const r=await sbc.auth.signInWithPassword({email:em,password:pw});if(r.error)return clErr(nice(r.error.message));
     await cloudEnter(r.data.user)})}
   else if('clStaff' in d){clBusy(b,async()=>{
-    const sh0=gv('cl-sh'),nm=gv('cl-sname'),pw=document.getElementById('cl-p').value;if(!slugN(sh0)||!slugN(nm)||!pw)return clErr('Enter the shop name, your name and your password.');
+    const un=gv('cl-sname').toLowerCase().replace(/\s+/g,''),pw=document.getElementById('cl-p').value,k=un.lastIndexOf('.');
+    if(k<1||!slugN(un.slice(0,k))||!slugN(un.slice(k+1))||!pw)return clErr('Enter your username (like raamih.icart) and your password.');
     const sh=!!(document.getElementById('cl-shared')||{}).checked;if(sh!==isShared()){try{localStorage.setItem('atoll_shared',sh?'1':'0')}catch(x){}sbc=mkClient(sh)}
-    const r=await sbc.auth.signInWithPassword({email:staffEmail(nm,sh0),password:pw});if(r.error)return clErr(/invalid login/i.test(r.error.message)?'Wrong shop name, name or password.':nice(r.error.message));
+    const r=await sbc.auth.signInWithPassword({email:staffEmail(un.slice(0,k),un.slice(k+1)),password:pw});if(r.error)return clErr(/invalid login/i.test(r.error.message)?'Wrong username or password.':nice(r.error.message));
     await cloudEnter(r.data.user)})}
   else if('clGoogle' in d){clBusy(b,async()=>{const r=await sbc.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin}});if(r.error)clErr(r.error.message)})}
   else if('clUp' in d){clBusy(b,async()=>{
@@ -1940,7 +1942,7 @@ document.addEventListener('click',async e=>{
     try{
       const r=await fnInvoke('create-staff',{body:{shop_id:cl.shop,password:pw,name:n,role:$('#ur').value,perms:CASHIER}});
       if(r.error){er.textContent=await fnError(r.error);b.disabled=false;return}
-      logit(me.name,'Added user '+n);await pullMeta();save();team();toast('User added. They sign in with the shop name, their name and this password.');
+      logit(me.name,'Added user '+n);await pullMeta();save();team();toast('User added. Their username is '+staffUser({role:'x',name:n})+'. Share it and the password.');
     }catch(x){er.textContent=errMsg(x);b.disabled=false}
     return}
   if(d.del){stop();const du=S.users.find(u=>u.id==d.del);
@@ -2450,11 +2452,48 @@ document.addEventListener('click',async e=>{
   }
 },true);
 
-/* ---- Add user: name + password only; staff sign in with shop name, name, password ---- */
+/* ---- Add user: name + password only; staff sign in with username (name.shop) + password ---- */
 function cloudAddUser(b){
-  const slug=cl.slug||slugN(S.shop),nm=slugN(S.shop)===slug?S.shop:slug;
-  return `<div class='card'><div class='hd'>Add user</div><p class='sub' style='font-size:13px;margin:0 0 8px'>Give each person a name and a password. On the sign-in page they choose <b>Staff sign in</b> and enter the shop name <b>${esc(nm)}</b>, their name and their password.</p><div class='add'><input id='un' placeholder='Name (for example Aisha)' autocomplete='off'><input id='cl-up' type='password' placeholder='Password (8+ characters)' autocomplete='new-password'><select id='ur'><option value='cashier'>Cashier</option><option value='full'>Full access</option></select></div><p id='ue' class='out' style='margin:8px 0 0'></p><p class='sub' style='font-size:13px;margin:6px 0 0'>${S.users.length>=b.p.inc?'Adding a user costs '+m(b.p.x)+' per month.':(b.p.inc-S.users.length)+' included seat left.'}</p><button class='go' data-cl-adduser>Add user</button></div>`;
+  const ex=slugN('Aisha')+'.'+(cl.slug||slugN(S.shop));
+  return `<div class='card'><div class='hd'>Add user</div><p class='sub' style='font-size:13px;margin:0 0 8px'>Give each person a name and a password. Their username is their name, a dot, then the shop name, for example <b>${esc(ex)}</b>. They sign in with it from <b>Staff sign in</b>.</p><div class='add'><input id='un' placeholder='Name (for example Aisha)' autocomplete='off'><input id='cl-up' type='password' placeholder='Password (8+ characters)' autocomplete='new-password'><select id='ur'><option value='cashier'>Cashier</option><option value='full'>Full access</option></select></div><p id='ue' class='out' style='margin:8px 0 0'></p><p class='sub' style='font-size:13px;margin:6px 0 0'>${S.users.length>=b.p.inc?'Adding a user costs '+m(b.p.x)+' per month.':(b.p.inc-S.users.length)+' included seat left.'}</p><button class='go' data-cl-adduser>Add user</button></div>`;
 }
+
+/* ---- Keep your place when the page is refreshed: screen, open sales, unsaved typing ---- */
+const UIK='atoll_ui';let uiTimer=0,uiDraft=null;
+function uiSnap(){
+  try{
+    if(!CLOUD||!me||cl.loading||!cl.shop)return;
+    saveCur();
+    const dr={};
+    document.querySelectorAll('#app input,#app textarea,#app select').forEach(el=>{
+      if(!el.id||el.type==='password'||el.type==='file'||el.type==='hidden')return;
+      dr[el.id]=el.type==='checkbox'||el.type==='radio'?el.checked:el.value});
+    sessionStorage.setItem(UIK,JSON.stringify({u:cl.uid,s:cl.shop,at:Date.now(),tab,sm,tm,usv,acx,cartSeq,carts,pmts,rt,bz,ucf,ucq,dr}));
+  }catch(e){}
+}
+function uiSave(){clearTimeout(uiTimer);uiTimer=setTimeout(uiSnap,350)}
+function uiClear(){try{sessionStorage.removeItem(UIK)}catch(e){}uiDraft=null}
+function uiRestore(){
+  uiDraft=null;
+  try{
+    const o=JSON.parse(sessionStorage.getItem(UIK)||'null');
+    if(!o||o.u!==cl.uid||o.s!==cl.shop||Date.now()-o.at>6*3600*1000)return;
+    tab=o.tab||'ov';sm=o.sm||sm;tm=o.tm||tm;usv=o.usv||usv;rt=o.rt||rt;bz=o.bz||bz;ucf=o.ucf||ucf;ucq=o.ucq||'';
+    if(Array.isArray(o.carts)&&o.carts.length){carts=o.carts;cartSeq=o.cartSeq||carts.length;acx=Math.min(o.acx||0,carts.length-1);loadCart(acx);pmts=Array.isArray(o.pmts)?o.pmts:[]}
+    uiDraft={tab:o.tab,dr:o.dr||{}};
+  }catch(e){}
+}
+function uiDrafts(){
+  const d=uiDraft;uiDraft=null;if(!d||d.tab!==tab)return;
+  Object.keys(d.dr).forEach(id=>{const el=document.getElementById(id);if(!el||el.type==='password'||el.type==='file')return;
+    if(el.type==='checkbox'||el.type==='radio')el.checked=!!d.dr[id];else if(el.value!==d.dr[id])el.value=d.dr[id]});
+}
+(function(){
+  if(typeof render!=='function')return;const _r=render;
+  render=function(){const x=_r.apply(this,arguments);uiSave();return x};
+  ['input','change','click'].forEach(ev=>document.addEventListener(ev,uiSave,true));
+  addEventListener('pagehide',uiSnap);document.addEventListener('visibilitychange',()=>{if(document.hidden)uiSnap()});
+})();
 
 if(CLOUD)cloudBoot();else render();
 </script>
