@@ -486,6 +486,10 @@ svg .ich{pointer-events:none}
 .rbt tbody tr:hover td{background:color-mix(in srgb,var(--shal) 45%,transparent)}
 @media(max-width:560px){.rbex{width:100%}.rbex button{flex:1}.rbnav input,.rbnav select{flex:1}}
 .rbk .kpi b{white-space:nowrap;font-size:20px}.rbk{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.rbt{table-layout:fixed;min-width:600px}.rbt th.r,.rbt td.r{width:130px;text-align:right}.rbt th:nth-child(2):not(.r){width:260px}.rbt td:first-child,.rbt td:nth-child(2):not(.r){overflow:hidden;text-overflow:ellipsis}
+.rbex{align-items:center}.rbex button,.rbex .go{height:40px;min-height:40px;margin:0;padding:0 18px;font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;width:auto;max-width:none;flex:none}
+.rbnav .ghost{font-size:14px;height:44px;min-height:44px;margin:0;padding:0 16px}.rbnav .ghost[data-rbstep]{font-size:22px;min-width:44px;padding:0 12px}
+.rbnav input,.rbnav select{height:44px;min-height:44px;margin:0}
 </style>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
