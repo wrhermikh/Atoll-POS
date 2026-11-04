@@ -55,7 +55,7 @@ create table plan_requests (
 
 create table records (
   shop_id    uuid not null references shops on delete cascade,
-  kind       text not null check (kind in ('products','cats','customers','inv','cash','regs','sups','pord','devs','log')),
+  kind       text not null check (kind in ('products','cats','customers','inv','cash','regs','sups','pord','devs','log','quot')),
   rid        text not null,
   data       jsonb not null,
   updated_at timestamptz not null default now(),
@@ -92,6 +92,7 @@ create or replace function can_read_kind(s uuid, k text) returns boolean languag
     when 'customers' then is_member(s)
     when 'devs'      then is_member(s)
     when 'inv'       then has_perm(s,'invview') or has_perm(s,'sell') or has_perm(s,'recv') or has_perm(s,'refund')
+    when 'quot'      then has_perm(s,'invview') or has_perm(s,'sell')
     when 'cash'      then has_perm(s,'cbview') or has_perm(s,'sell') or has_perm(s,'expense') or has_perm(s,'recv')
     when 'regs'      then has_perm(s,'register') or has_perm(s,'reports')
     when 'sups'      then has_perm(s,'purchase')
@@ -106,6 +107,7 @@ create or replace function can_write_kind(s uuid, k text) returns boolean langua
     when 'cats'      then has_perm(s,'prodedit')
     when 'customers' then has_perm(s,'sell') or has_perm(s,'recv') or has_perm(s,'credit')
     when 'inv'       then has_perm(s,'sell') or has_perm(s,'recv') or has_perm(s,'refund')
+    when 'quot'      then has_perm(s,'sell')
     when 'cash'      then has_perm(s,'sell') or has_perm(s,'expense') or has_perm(s,'recv') or has_perm(s,'refund')
     when 'regs'      then has_perm(s,'register')
     when 'sups'      then has_perm(s,'purchase')
@@ -302,6 +304,16 @@ grant update (status) on plan_requests to authenticated;
 create policy records_read on records for select using (can_read_kind(shop_id, kind));
 -- no insert/update/delete policies on records: writes go through put_records / delete_records
 revoke insert, update, delete on records from anon, authenticated;
+
+
+-- ---------- Table access (explicit, so it does not depend on Supabase's default grants) ----------
+-- Row level security still decides which rows each person can touch. These grants only let the
+-- signed-in role reach the tables at all. Nothing is granted to the anonymous role.
+grant usage on schema public to anon, authenticated;
+grant select on shops, members, plan_requests, records to authenticated;
+grant delete on members to authenticated;
+grant insert on plan_requests to authenticated;
+revoke all on shops, members, plan_requests, records from anon;
 
 -- ---------- Function access ----------
 revoke all on function put_records(uuid,text,jsonb), delete_records(uuid,text,text[]), claim_invoice_numbers(uuid,int),
@@ -522,3 +534,104 @@ alter publication supabase_realtime add table records, shops, members;
 -- ---------- First platform admin ----------
 -- After you have signed up in the app with your own email, run (replace the address):
 --   insert into platform_admins select id from auth.users where email = 'you@example.com';
+-- Lets the Edge Functions (create-staff, set-staff-password) read and write the shop tables.
+-- Safe to run more than once.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
+grant execute on all functions in schema public to service_role;
+-- Invite staff by email (no Edge Function needed). Safe to run more than once.
+-- The owner adds a name, email and role. When that person signs in (with Google or with a
+-- confirmed email and password) using the same email, they join the shop automatically.
+
+
+create table if not exists invites (
+  id         uuid primary key default gen_random_uuid(),
+  shop_id    uuid not null references shops on delete cascade,
+  email      text not null,
+  name       text not null,
+  role       member_role not null default 'cashier',
+  perms      text[] not null default '{sell,prodview,register}',
+  created_at timestamptz not null default now(),
+  unique (shop_id, email)
+);
+alter table invites enable row level security;
+drop policy if exists invites_read on invites;
+create policy invites_read on invites for select using (is_manager(shop_id));
+revoke all on invites from anon, authenticated;
+grant select on invites to authenticated;
+grant all on invites to service_role;
+
+create or replace function invite_member(p_shop uuid, p_email text, p_name text, p_role text, p_perms text[])
+returns uuid language plpgsql security definer set search_path = public as $$
+declare e text := lower(trim(coalesce(p_email,''))); new_id uuid; allowed text[] := array['sell','discount','credit','prodview','prodedit','invview','recv','cbview','expense','reports','purchase','register','refund'];
+begin
+  if not is_manager(p_shop) then raise exception 'Only the owner or full-access staff can add users'; end if;
+  if (select status from shops where id = p_shop) <> 'active' then raise exception 'This shop subscription is suspended'; end if;
+  if coalesce(trim(p_name),'') = '' then raise exception 'Enter a name'; end if;
+  if e !~ '^[^\s@]+@[^\s@]+\.[^\s@]{2,}$' then raise exception 'Enter a valid email address'; end if;
+  if p_role not in ('cashier','full') then raise exception 'Role must be cashier or full'; end if;
+  if exists (select 1 from members where shop_id = p_shop and lower(email) = e) then raise exception 'That person is already in this shop'; end if;
+  insert into invites(shop_id, email, name, role, perms)
+    values (p_shop, e, trim(p_name), p_role::member_role,
+            case when p_role = 'cashier' then coalesce((select array_agg(x) from unnest(p_perms) x where x = any(allowed)), '{}') else '{}' end)
+    on conflict (shop_id, email) do update set name = excluded.name, role = excluded.role, perms = excluded.perms
+    returning invites.id into new_id;
+  return new_id;
+end $$;
+
+create or replace function revoke_invite(p_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  delete from invites where id = p_id and is_manager(shop_id);
+end $$;
+
+-- Called by the app right after sign-in: turns any invitation for this account's email into membership.
+create or replace function claim_invites() returns int
+language plpgsql security definer set search_path = public as $$
+declare e text; n int := 0; r record;
+begin
+  if auth.uid() is null then return 0; end if;
+  select lower(email) into e from auth.users where id = auth.uid() and email_confirmed_at is not null;
+  if e is null then return 0; end if;
+  for r in select * from invites where email = e and (select status from shops where id = shop_id) = 'active' loop
+    insert into members(shop_id, user_id, name, email, role, perms)
+      values (r.shop_id, auth.uid(), r.name, e, r.role, r.perms)
+      on conflict (shop_id, user_id) do nothing;
+    delete from invites where id = r.id;
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+
+revoke all on function invite_member(uuid,text,text,text,text[]), revoke_invite(uuid), claim_invites() from public, anon;
+grant execute on function invite_member(uuid,text,text,text,text[]), revoke_invite(uuid), claim_invites() to authenticated;
+
+-- Staff sign in with shop name + their name + password. Each shop gets a short unique sign-in name.
+-- Safe to run more than once on a live database.
+alter table shops add column if not exists slug text;
+
+create or replace function make_shop_slug(p_name text, p_id uuid) returns text
+language plpgsql as $$
+declare base text; cand text; n int := 1;
+begin
+  base := regexp_replace(lower(coalesce(p_name,'')), '[^a-z0-9]', '', 'g');
+  if base = '' then base := 'shop'; end if;
+  cand := base;
+  while exists (select 1 from shops where slug = cand and id <> p_id) loop
+    n := n + 1; cand := base || n;
+  end loop;
+  return cand;
+end $$;
+
+create or replace function shops_set_slug() returns trigger
+language plpgsql as $$
+begin
+  if new.slug is null or new.slug = '' then new.slug := make_shop_slug(new.name, new.id); end if;
+  return new;
+end $$;
+drop trigger if exists shops_slug on shops;
+create trigger shops_slug before insert on shops for each row execute function shops_set_slug();
+
+update shops set slug = make_shop_slug(name, id) where slug is null or slug = '';
+create unique index if not exists shops_slug_key on shops(slug);

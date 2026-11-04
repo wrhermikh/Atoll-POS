@@ -1,0 +1,6 @@
+-- Lets the Edge Functions (create-staff, set-staff-password) read and write the shop tables.
+-- Safe to run more than once.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
+grant execute on all functions in schema public to service_role;
