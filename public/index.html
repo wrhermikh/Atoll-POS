@@ -600,6 +600,19 @@ html.dv .ath{left:auto;right:50%;transform:translateX(50%)}
 @keyframes splfly{from{translate:-40px 0}to{translate:360px -14px}}
 @keyframes splbar{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
 @media(prefers-reduced-motion:reduce){.splw,.splboat,.splsail,.splflag,.splpalm,.splbird,.splsun,.splhalo,.spls circle,.splsp{animation:none!important}.splbar i{animation-duration:2.6s}}
+/* v19 consistency: spacing under wrapped header rows, compact summary cards */
+.prhd{margin-bottom:14px}
+.fs{min-width:0;justify-content:flex-start}
+.fs b{white-space:nowrap;font-size:clamp(17px,5vw,22px);line-height:1.25}
+.fs span{line-height:1.25}
+.fsum{margin-bottom:16px}
+.kpi b{white-space:nowrap}.kpi>div{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}
+@media (max-width:480px){
+.add{grid-template-columns:1fr!important}.add input:first-child{grid-column:auto!important}
+.g2{grid-template-columns:1fr!important}
+.rbrow>.rbf1:first-child{grid-column:1/-1}
+.rbrow{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+}
 </style>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -2541,7 +2554,7 @@ document.addEventListener('change',e=>{
 let qv='list',qd=null,qfil='all',qs='';
 function quotPage(){qv==='edit'&&qd?quotEdit():quotList()}
 function quotList(){
-  setTop('Quotations',null,`<button class='p' data-qnew>New quotation</button>`);
+  setTop('Quotations',null,`<button class='ib pri' data-qnew aria-label='New quotation'>${ic('plus')}</button>`);
   const L=QL(),sq=qs.toLowerCase();
   const F=[['all','All'],['open','Open'],['accepted','Accepted'],['closed','Declined or expired']];
   const M=q=>{const s=qStat(q)[0];return qfil==='all'||(qfil==='open'&&(s==='Draft'||s==='Sent'))||(qfil==='accepted'&&s==='Accepted')||(qfil==='closed'&&(s==='Declined'||s==='Expired'))};
@@ -3303,7 +3316,7 @@ FD.quo=function(){
   w.innerHTML=rows.length?rows.map(({q,st,t})=>`<button class='item' style='width:100%;text-align:left' data-qopen='${esc(q.no)}'><div><b>${esc(qn(q))}</b> · ${esc(q.cust||'Customer')}<small>${qDate(q.at)}${q.valid?' · valid until '+qDate(q.valid):''}</small></div><div style='text-align:right'><b>${m(t)}</b><br><span class='tag ${st[1]}'>${st[0]}</span></div></button>`).join('')+(L.length>rows.length?`<button class='ghost fmore' data-fmore='quo'>Show 50 more</button>`:''):`<div class='empty'>${QL().length?'No quotations match these filters.':'No quotations yet. Tap New quotation to make one for a customer.'}</div>`;
 };
 function quotList(){
-  quoOpts();FP.quo=quotList;setTop('Quotations',null,`<button class='p' data-qnew>New quotation</button>`);
+  quoOpts();FP.quo=quotList;setTop('Quotations',null,`<button class='ib pri' data-qnew aria-label='New quotation'>${ic('plus')}</button>`);
   $('#app').innerHTML=`<div id='fsum-quo'></div>${fbar('quo')}<div class='card flst' id='flist-quo'></div>`;FD.quo();
 }
 
