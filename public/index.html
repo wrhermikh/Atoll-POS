@@ -1347,7 +1347,7 @@ document.addEventListener("click",e=>{
   else if('csvexp' in d)copy(['name,price,cost,stock,barcode,sku,category'].concat(S.products.map(p=>[p.name,p.price,p.cost||0,pstock(p),p.barcode||'',p.sku||'',p.cat||''].map(cc).join(','))).join('\n'));
   else if('ropen' in d){S.regs.unshift({id:Date.now(),uid:me.id,uname:me.name,open:Date.now(),float:Math.max(0,+$('#rfl').value||0)});logit(me.name,'Opened register');save();bReg()}
   else if('rclose' in d){const r=S.regs.find(x=>!x.closed&&x.uid===me.id);if(!r)return;const cv=$('#rcnt').value;if(cv===''){$('#rcnt').focus();return}r.expected=regExp(r);r.closed=Date.now();r.counted=Math.max(0,+cv||0);r.diff=r.counted-r.expected;logit(me.name,'Closed register, difference '+m(r.diff));save();bReg()}
-  else if('sup' in d){const n=$('#sn2').value.trim();if(!n){$('#sn2').focus();return}S.sups.push({id:Date.now(),name:n,phone:$('#sp2').value.trim(),gst:$('#sg2').checked});save();bPur()}
+  else if('sup' in d){const n=$('#sn2').value.trim();if(!n){$('#sn2').focus();return}S.sups.push({id:Date.now(),name:n,phone:$('#sp2').value.trim(),gst:!!($('#sg2')&&$('#sg2').checked)});save();bPur()}
   else if(d.supdel){S.sups=S.sups.filter(s=>s.id!=d.supdel);save();bPur()}
   else if('ponew' in d){if(!S.sups.length){toast('Add a supplier first.',1);return}pdr={sid:S.sups[0].id,items:[]};poEd()}
   else if(d.reo){if(!S.sups.length){toast('Add a supplier first.',1);return}const l=allLeaves().find(x=>lkey(x)===d.reo);if(!l)return;pdr={sid:S.sups[0].id,items:[{pid:l.pid,vi:l.vi,si:l.si,name:l.name,qty:10,cost:S.products.find(x=>x.id===l.pid).cost||0}]};poEd()}
@@ -4294,6 +4294,16 @@ let FZCUR='m';
   const app=document.getElementById('app');
   if(app){const fix=()=>{if(app.querySelector(':scope>.ath,:scope>.lpg')&&app.dataset.p)app.removeAttribute('data-p')};
     new MutationObserver(fix).observe(app,{childList:true});fix()}
+})();
+/* error messages stay long enough to read (and can be tapped away) */
+(function(){const orig=toast;
+  toast=function(t,bad){
+    if(!bad)return orig.apply(this,arguments);
+    document.querySelectorAll('body>div[role=status]').forEach(e=>e.remove());
+    const el=document.createElement('div');el.textContent=t;el.setAttribute('role','status');
+    el.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:96px;background:var(--acc);color:#fff;padding:12px 18px;border-radius:12px;z-index:90;font-weight:600;max-width:90%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer';
+    el.onclick=()=>el.remove();document.body.appendChild(el);setTimeout(()=>el.remove(),7000);
+  };
 })();
 
 
