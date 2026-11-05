@@ -1,7 +1,7 @@
 /* Atoll POS service worker: keeps the app and its libraries on the device so it opens with no internet.
    Shop data is stored separately by the app (IndexedDB) and never passes through here. */
-const V = 'atoll-sw-3'
-const SHELL = ['/', '/index.html', '/config.js']
+const V = 'atoll-sw-5'
+const SHELL = ['/', '/index.html', '/config.js', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png']
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
@@ -51,7 +51,7 @@ self.addEventListener('fetch', (e) => {
   const u = new URL(req.url)
   if (u.hostname.endsWith('.supabase.co') || u.hostname.endsWith('.supabase.in')) return // data goes straight to the server
   if (u.origin === self.location.origin) {
-    if (req.mode === 'navigate') return e.respondWith(networkFirst(req, '/index.html'))
+    if (req.mode === 'navigate' && (u.pathname === '/' || u.pathname === '/index.html')) return e.respondWith(networkFirst(req, '/index.html'))
     return e.respondWith(networkFirst(req))
   }
   if (/cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com/.test(u.hostname)) return e.respondWith(cacheFirst(req))
