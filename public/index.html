@@ -7127,6 +7127,67 @@ document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.c
   if(card&&!document.getElementById('gwadm'))card.insertAdjacentHTML('beforebegin',`<div class='card' id='gwadm'><div class='hd'>Card payments (BML Connect, MIB)<span class='tag ${on?'':'d'}'>${on?'Allowed':'Coming soon'}</span></div><p class='sub' style='margin:0 0 8px'>${on?'This shop owner can set up and use BML Connect and MIB.':'The owner sees "Coming soon". Allow it only after you have agreed it with the shop.'}</p><button class='${on?'ghost danger':'go'}' style='${on?'width:100%':'margin:0;width:100%'}' data-gwallow='${id}' data-gwto='${on?0:1}'>${on?'Stop card payments for this shop':'Allow card payments for this shop'}</button></div>`)}catch(e){}return r}})();
 document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-gwallow]');if(!t)return;e.stopImmediatePropagation();const id=t.dataset.gwallow,to=t.dataset.gwto==='1';
   const r=await sbc.rpc('admin_gateway_allow',{p_shop:id,p_on:to});if(r&&r.error){toast(r.error.message||'Could not change',true);return}toast(to?'Card payments allowed':'Card payments stopped');adminShop(id)},true);
+/* ---------- landing page: simpler, organised around what the shop gets ---------- */
+(function(){const st=document.createElement('style');st.textContent=`
+.lpn{margin:34px 0 8px}.lpn h2{font-size:26px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}.lpn .lpns{color:var(--mut);margin:0 0 18px;font-size:15.5px;max-width:560px}
+.lpng{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.lpnc{background:var(--card);border:1px solid var(--ln);border-radius:18px;padding:16px}
+.lpnc .lpni{width:38px;height:38px;border-radius:12px;background:var(--shal);color:var(--btn);display:grid;place-items:center;margin-bottom:10px}.lpnc .lpni svg{width:20px;height:20px}
+.lpnc b{display:block;font-size:16px;margin-bottom:3px}.lpnc p{margin:0;color:var(--mut);font-size:14px;line-height:1.45}
+.lpnr{background:var(--shal);border-radius:24px;padding:22px;margin-top:34px}.lpnr .lpng .lpnc{background:var(--card)}
+.lpnr h2{margin-top:0}.lpnr .lpng{grid-template-columns:repeat(2,1fr)}
+.lpnt{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.lpnt span{font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:99px;border:1px solid var(--ln);background:var(--card)}
+.lpnt span.soon{color:var(--mut);border-style:dashed;font-weight:500}
+@media(max-width:860px){.lpng{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.lpng,.lpnr .lpng{grid-template-columns:1fr}.lpn h2{font-size:23px}.lpnr{padding:16px;border-radius:20px}}
+`;document.head.appendChild(st)})();
+landing=function(buttons,extra){
+  const ck="<svg viewBox='0 0 24 24' width='16' height='16' fill='none' stroke='currentColor' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M5 12.5l4.5 4.5L19 7.5'/></svg>";
+  const li=a=>a.map(t=>`<li><span class='lpgk'>${ck}</span><span>${t}</span></li>`).join('');
+  const g=gstOn(),bas=PLANS.basic,pro=PLANS.pro,n=x=>Number(x).toLocaleString('en');
+  const card=(i,t,d)=>`<div class='lpnc'><span class='lpni'>${ic(i)}</span><b>${t}</b><p>${d}</p></div>`;
+  return `<div class='lpg'>
+  <div class='lpgb'><span class='lpgm'>A</span><span class='lpgw'>Atoll POS</span></div>
+  <div class='lpgh'>
+    <div class='lpgt'>
+      <h1>Run your shop.<br><i>Know your numbers.</i></h1>
+      <p class='lpgs'>The simple point of sale made for Maldivian shops and restaurants. Sell, track stock, take orders at the table and prepare your MIRA GST return.</p>
+      <div class='lpgc'><span>Fast checkout</span><span>Stock and expiry</span><span>Restaurant tables</span><span>MIRA GST</span></div>
+    </div>
+    <div class='lpgf card'>${buttons}${extra||''}</div>
+  </div>
+  <section class='lpn'><h2>Everything a shop needs</h2><p class='lpns'>One app on your phone, tablet or computer.</p>
+   <div class='lpng'>
+    ${card('cart','Fast checkout','Scan or tap items. Take cash, card or bank transfer, or split the bill.')}
+    ${card('box','Stock and expiry','See what is low or expiring. Record purchases and suppliers.')}
+    ${card('book','Credit customers','Put sales on account, set limits and collect payments.')}
+    ${card('rcpt','GST made easy','GST invoices and the figures for your MIRA return.')}
+    ${card('chart','Reports and expenses','Daily sales, profit, cashbook, and bills with receipt photos.')}
+    ${card('users','Your team, your rules','You choose what each staff member can see and do.')}
+   </div></section>
+  <section class='lpn lpnr'><h2>Made for restaurants and cafés</h2><p class='lpns'>Switch on restaurant mode and the same app runs your tables.</p>
+   <div class='lpng'>
+    ${card('cart','Tables and orders','Open a table, add items, send to the kitchen and settle the bill. Set your own service charge.')}
+    ${card('box','Kitchen screen','Orders appear instantly. Staff you choose can start and finish them.')}
+    ${card('doc','QR menu','Guests scan, order and can change it for the minutes you allow, until the kitchen starts.')}
+    ${card('ov','Never miss an order','Sound, vibration and notifications, even when the app is closed.')}
+   </div></section>
+  <section class='lpn'><h2>Simple to start</h2><p class='lpns'>Nothing to install or set up on a server.</p>
+   <div class='lpnt'><span>Works on phone, tablet and computer</span><span>English and Dhivehi</span><span>Install like an app</span><span>Data safely in the cloud</span><span class='soon'>Coming soon: card payments with BML and MIB</span><span class='soon'>Coming soon: mobile app</span></div></section>
+  <div class='lpgp' style='margin-top:34px'>
+    <div class='lpgpc'>
+      <div class='lpgpn'>Basic</div>
+      <div class='lpgpr'><small>Rf</small><b>${n(bas.p)}</b><span>/ month</span></div>
+      <ul>${li([bas.inc+' users included','+Rf '+bas.x+' per extra user','Up to '+n(bas.cap)+' products','Sales, stock and credit customers'])}</ul>
+    </div>
+    <div class='lpgpc pro'>
+      <span class='lpgbd'>30 days free</span>
+      <div class='lpgpn'>Pro</div>
+      <div class='lpgpr'><small>Rf</small><b>${n(pro.p)}</b><span>/ month</span></div>
+      <ul>${li([pro.inc+' users included','+Rf '+pro.x+' per extra user','Unlimited products','Variants, batch and serial tracking',g?'Reports, GST and purchasing':'Reports and purchasing'])}</ul>
+    </div>
+  </div>
+  ${lpgEnd()}
+  <p class='lpgl'><a href='/privacy' target='_blank' rel='noopener'>Privacy Policy</a><span>·</span><a href='/terms' target='_blank' rel='noopener'>Terms of Service</a></p></div>`};
+
 
 
 if(new URLSearchParams(location.search).has('menu'))cmBoot();else if(CLOUD)cloudBoot();else render();
