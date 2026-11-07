@@ -950,6 +950,7 @@ body.cm>*:not(#cmenu){display:none!important}
 .cmmsg{text-align:center;color:var(--mut);padding:40px 10px}
 .cmdone{text-align:center;padding-top:80px}.cmtick{width:76px;height:76px;border-radius:50%;background:var(--btn);color:var(--onb);font-size:40px;display:grid;place-items:center;margin:0 auto 16px}.cmtick.bad{background:var(--acc);color:#fff}
 @media print{.rxcards{grid-template-columns:1fr 1fr}}
+.pxhide{display:none!important}.pxu{min-width:34px;font-size:13px;color:var(--mut)}
 </style>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -1395,7 +1396,7 @@ function pr(){
 }
 function leaves(p){const o=[];(p.variants||[]).forEach((v,vi)=>{const vp=v.price!=null?v.price:p.price;if(v.subs&&v.subs.length)v.subs.forEach((s,si)=>o.push({vi,si,price:s.price!=null?s.price:vp,stock:s.stock}));else o.push({vi,price:vp,stock:v.stock})});return o}
 const minPrice=p=>Math.min(...leaves(p).map(x=>x.price));
-const pstock=p=>p.kit&&p.kit.length?kitStock(p):p.variants&&p.variants.length?leaves(p).reduce((a,x)=>a+x.stock,0):p.stock;
+const pstock=p=>p.off?0:p.kit&&p.kit.length?kitStock(p):p.variants&&p.variants.length?leaves(p).reduce((a,x)=>a+x.stock,0):p.stock;
 function node(l){const p=S.products.find(x=>x.id===l.id);if(!p)return null;if(l.vi==null)return p;const v=p.variants&&p.variants[l.vi];if(!v)return null;return l.si==null?v:((v.subs&&v.subs[l.si])||null)}
 function addLine(p,vi,si){
   const n=node({id:p.id,vi,si});if(!n)return;
@@ -1784,7 +1785,7 @@ function uRange(k){
   return({today:{f:t0,t:t0+D,pf:t0-D,pt:t0,l:'Today'},yest:{f:t0-D,t:t0,pf:t0-2*D,pt:t0-D,l:'Yesterday'},week:{f:w0,t:w0+7*D,pf:w0-7*D,pt:w0,l:'This week'},lweek:{f:w0-7*D,t:w0,pf:w0-14*D,pt:w0-7*D,l:'Last week'},month:{f:mo0,t:mo1,pf:pm0,pt:mo0,l:'This month'},lmonth:{f:pm0,t:mo0,pf:pp0,pt:pm0,l:'Last month'}})[k];
 }
 const UM={rev:['Revenue (excl. GST)',i=>i.total-i.gst],cost:['Cost of goods',i=>i.items.reduce((a,l)=>a+(l.cost||0)*l.qty,0),1],prof:['Profit',i=>i.total-i.gst-i.items.reduce((a,l)=>a+(l.cost||0)*l.qty,0),1],disc:['Discounts',i=>i.cn?0:(i.disc||0)],ref:['Refunds',i=>i.cn?-i.total:0],cnt:['Invoices',i=>i.cn?0:1],gst:['GST collected',i=>i.gst,1]};
-const stkPill=p=>{if(p.ns)return "<span class='pill ok'>Service</span>";const s=pstock(p),u=p.unit==='kg'?' kg':'';return s<=0?`<span class='pill bad'>Out of stock</span>`:s<=5?`<span class='pill warn'>Low \u00b7 ${+s.toFixed(3)}${u}</span>`:`<span class='pill ok'>${+s.toFixed(3)}${u} in stock</span>`};
+const stkPill=p=>{if(p.off)return "<span class='pill bad'>Unavailable</span>";if(p.ing){const s=+p.stock||0,u=' '+(p.iu||'');return s<=0?`<span class='pill bad'>Out of stock</span>`:p.rl>0&&s<=p.rl?`<span class='pill warn'>Low · ${+s.toFixed(3)}${u}</span>`:`<span class='pill ok'>${+s.toFixed(3)}${u}</span>`}if(p.dish&&p.ns)return "<span class='pill ok'>Available</span>";if(p.dish&&p.kit&&p.kit.length){const s=pstock(p);return s<=0?`<span class='pill bad'>Sold out</span>`:s<=5?`<span class='pill warn'>${s} portion${s===1?'':'s'} left</span>`:`<span class='pill ok'>${s} portions</span>`}if(p.ns)return "<span class='pill ok'>Service</span>";const s=pstock(p),u=p.unit==='kg'?' kg':'';return s<=0?`<span class='pill bad'>Out of stock</span>`:s<=5?`<span class='pill warn'>Low \u00b7 ${+s.toFixed(3)}${u}</span>`:`<span class='pill ok'>${+s.toFixed(3)}${u} in stock</span>`};
 /* ---------- dashboard ---------- */
 function uSteps(){return[
  ['Add your shop details',gstOn()?'Name, address and GST TIN':'Name and address',!!(S.shop&&S.addr&&(S.tin||!gstOn())),'set'],
@@ -1872,10 +1873,10 @@ function sItems(){
 }
 function sellList(){
   const el=$('#sl');if(!el)return;const qq=q.toLowerCase();
-  const Ls=S.products.filter(p=>(!cf||p.cat===cf)&&(!qq||(p.name+' '+(p.sku||'')+' '+(p.barcode||'')).toLowerCase().includes(qq)));
+  const Ls=S.products.filter(p=>!p.ing&&(!cf||p.cat===cf)&&(!qq||(p.name+' '+(p.sku||'')+' '+(p.barcode||'')).toLowerCase().includes(qq)));
   el.innerHTML=Ls.slice(0,80).map(p=>{
     const hv=p.variants&&p.variants.length,st=pstock(p),ic0=cart.filter(l=>l.id===p.id),kg=ic0.filter(l=>l.unit==='kg').reduce((a,l)=>a+l.qty,0),qn=ic0.filter(l=>l.unit!=='kg').reduce((a,l)=>a+l.qty,0);
-    const right=ic0.length?`<button class='qchip' data-v3cart>${ic('edit')} ${kg?(+kg.toFixed(3))+' kg':qn+' pcs'}</button>`:`<button class='addb' data-add='${p.id}' ${st<=0?'disabled':''}>${ic('plus')} Add</button>`;
+    const right=ic0.length&&!(p.mods&&p.mods.length)?`<button class='qchip' data-v3cart>${ic('edit')} ${kg?(+kg.toFixed(3))+' kg':qn+' pcs'}</button>`:`<button class='addb' data-add='${p.id}' ${st<=0?'disabled':''}>${ic('plus')} Add</button>`;
     return `<div class='srow'>${p.img?`<img class='sth' src='${p.img}' alt=''>`:''}<div class='si'><b>${esc(p.name)}</b><small>${esc(p.sku||p.cat||'')}</small>${stkPill(p)}${taxPill(p)}</div><div class='sp'><span class='sprice'>${hv?'From ':''}${m(hv?minPrice(p):p.price)}${p.unit==='kg'?' / kg':''}</span>${right}</div></div>`}).join('')||`<div class='empty'>No products match.</div>`;
 }
 function cartBar(){
@@ -4841,7 +4842,9 @@ function lpgDesk(){
 /* v23: product studio (new product form) */
 const XTY=[['std','Standard','One item, sold by the piece'],['var','Variants','Sizes, flavours or colours'],['kg','By weight','Priced per kilogram'],['batch','Batch and expiry','Track lots and expiry dates'],['serial','Serial numbers','Track each unit, with warranty'],['kit','Bundle','Sell several products as one'],['svc','Service','No stock to count']];
 const XPRO={var:1,batch:1,serial:1,kit:1};
-function xtype0(x){return x.kit&&x.kit.length?'kit':x.ns?'svc':x.unit==='kg'?'kg':x.variants&&x.variants.length?'var':x.trk==='batch'?'batch':x.trk==='serial'?'serial':'std'}
+XTY.push(['dish','Dish','Made in your kitchen. Add a recipe and ingredient stock follows every sale.'],['ing','Ingredient','Raw stock such as rice, tuna or oil. Used in recipes and not shown on the menu.']);
+function xtypesFor(cur){const rx=typeof rxOn==='function'&&rxOn();if(!rx)return XTY.filter(t=>(t[0]!=='dish'&&t[0]!=='ing')||t[0]===cur);const ord=['dish','std','ing'],A=XTY.filter(t=>ord.includes(t[0])||t[0]===cur).map(t=>t[0]==='std'?['std','Ready item','Bought in and sold as it is, like bottled drinks or snacks']:t);return A.sort((a,b)=>(ord.indexOf(a[0])+9)%9-(ord.indexOf(b[0])+9)%9)}
+function xtype0(x){return x.ing?'ing':x.dish?'dish':x.kit&&x.kit.length?'kit':x.ns?'svc':x.unit==='kg'?'kg':x.variants&&x.variants.length?'var':x.trk==='batch'?'batch':x.trk==='serial'?'serial':'std'}
 function xinit(x){
   if(x._xi)return;x._xi=1;const p=x.id?S.products.find(y=>y.id===x.id):null,s=p||{};
   ['desc','brand','sup','img'].forEach(k=>{if(x[k]==null)x[k]=s[k]||''});
@@ -4850,7 +4853,11 @@ function xinit(x){
   if(x.trk==null)x.trk=s.trk||'';
   if(x.kit==null)x.kit=(s.kit||[]).map(c=>({id:c.id,q:String(c.q)}));
   if(s.ns&&x.id)x.stock='';
-  if(!x.ty)x.ty=xtype0(x);
+  x.ing=!!s.ing;x.dish=!!s.dish;
+  if(x.rcp==null)x.rcp=s.dish?(s.kit||[]).map(c=>({id:c.id,q:String(c.q)})):[];
+  if(x.mods==null)x.mods=(s.mods||[]).map(o=>({n:o.n,pr:String(o.pr)}));
+  if(x.prep==null)x.prep=s.prep?String(s.prep):'';if(x.stn==null)x.stn=s.stn||'';if(x.tags==null)x.tags=(s.tags||[]).slice();if(x.off==null)x.off=!!s.off;if(x.iu==null)x.iu=s.iu||'kg';
+  if(!x.ty)x.ty=(!x.id&&typeof rxOn==='function'&&rxOn())?'dish':xtype0(x);
 }
 function kitStock(p){if(!p.kit||!p.kit.length)return 0;let mn=Infinity;for(const c of p.kit){const q=S.products.find(y=>y.id===c.id);if(!q)return 0;mn=Math.min(mn,Math.floor((+q.stock+1e-9)/(+c.q||1)))}return isFinite(mn)?Math.max(0,mn):0}
 function kitSync(){S.products.forEach(p=>{if(p.kit&&p.kit.length)p.stock=kitStock(p)})}
@@ -4871,6 +4878,7 @@ function xSku(x){const w=(x.name||'ITEM').toUpperCase().replace(/[^A-Z0-9 ]/g,''
 function xImg(file,cb){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const N=360,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d'),s=Math.min(im.width,im.height),sx=(im.width-s)/2,sy=(im.height-s)/2;g.fillStyle='#fff';g.fillRect(0,0,N,N);g.drawImage(im,sx,sy,s,s,0,0,N,N);cb(c.toDataURL('image/jpeg',.74))};im.onerror=()=>toast('That image could not be read.',1);im.src=fr.result};fr.readAsDataURL(file)}
 function xval(x){
   if(x.ty==='kit'){if(!x.kit.length)return 'Add at least one product to the bundle.';const ids=x.kit.map(c=>String(c.id));if(x.kit.some(c=>!c.id||!(+c.q>0)))return 'Choose a product and a quantity for every bundle item.';if(new Set(ids).size!==ids.length)return 'Each product can appear once in a bundle.';if(x.id&&ids.includes(String(x.id)))return 'A bundle cannot contain itself.'}
+  if(x.ty==='dish'){const R=x.rcp||[];if(R.length&&!isPro())return 'Recipes are on the Pro plan. Remove the ingredients to save this dish without a recipe.';if(R.some(r=>!r.id||!(+r.q>0)))return 'Choose an ingredient and a quantity for every recipe line.';const ids=R.map(r=>String(r.id));if(new Set(ids).size!==ids.length)return 'Each ingredient can appear once in a recipe.';if((x.mods||[]).some(o=>(o.n||'').trim()===''&&o.pr!==''))return 'Give every add-on a name.'}
   return '';
 }
 function xsave(p,x){
@@ -4895,31 +4903,32 @@ function editor(){
   const num=(v,a,ph)=>`<input type='number' min='0' inputmode='decimal' placeholder='${ph||'0'}' value='${v}' ${a}>`;
   const vl=esc(x.vlabel||'Variant'),sl=esc(x.slabel||'Option'),red="style='color:var(--acc)'";
   const sup=[...new Set([...(S.sups||[]).map(s=>s.name),...S.products.map(p=>p.sup)].filter(Boolean))],brs=[...new Set(S.products.map(p=>p.brand).filter(Boolean))];
-  const tinfo=XTY.find(t=>t[0]===T)||XTY[0];
-  const stockish=T==='std'||T==='kg'||T==='batch'||T==='serial';
+  const tinfo=xtypesFor(T).find(t=>t[0]===T)||XTY[0];
+  const stockish=T==='std'||T==='kg'||T==='batch'||T==='serial'||T==='ing';if(T==='dish'&&x.rcp.length)x.cost=String(Math.round(xRecipeCost(x)*100)/100);
   const comps=S.products.filter(p=>p.id!==x.id&&!(p.variants&&p.variants.length)&&!p.ns&&!(p.kit&&p.kit.length)&&!tkOn(p));
   const kitTotal=x.kit.reduce((a,c)=>{const q=S.products.find(y=>y.id==c.id);return a+(q?q.price*(+c.q||0):0)},0),kitCost=x.kit.reduce((a,c)=>{const q=S.products.find(y=>y.id==c.id);return a+(q?(q.cost||0)*(+c.q||0):0)},0);
   $('#m').innerHTML=`<div class='modal pxm'><div><div class='hd'>${x.id?'Edit product':'New product'}${x.id?`<button data-xdup>Duplicate</button>`:''}</div>
   <span class='fl'>Product type</span>
-  <div class='pxt' role='tablist'>${XTY.map(t=>`<button type='button' role='tab' aria-selected='${t[0]===T}' class='${t[0]===T?'on':''}' data-xty='${t[0]}'>${t[1]}${XPRO[t[0]]&&!pro?`<i>Pro</i>`:''}</button>`).join('')}</div>
+  <div class='pxt' role='tablist'>${xtypesFor(T).map(t=>`<button type='button' role='tab' aria-selected='${t[0]===T}' class='${t[0]===T?'on':''}' data-xty='${t[0]}'>${t[1]}${XPRO[t[0]]&&!pro?`<i>Pro</i>`:''}</button>`).join('')}</div>
   <p class='sub pxh'>${tinfo[2]}</p>
 
   <div class='pxc'><div class='pxk'>Basic information</div>
    <div class='pxb'><div class='pxp'>${x.img?`<img src='${x.img}' alt=''><button type='button' class='pxpd' data-xphd aria-label='Remove photo'>&times;</button>`:`<button type='button' class='pxpa' data-xph><svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M4 8h3l2-3h6l2 3h3v11H4z'/><circle cx='12' cy='13' r='3.5'/></svg><span>Add photo</span></button>`}<input type='file' accept='image/*' id='xphf' hidden></div>
-   <div class='pxn'>${f('Product name *',`<input data-e='name' autocomplete='off' placeholder='e.g. Cotton T-shirt' value='${esc(x.name)}'>`)}</div></div>
+   <div class='pxn'>${f('Product name *',`<input data-e='name' autocomplete='off' placeholder='${T==='dish'?'e.g. Chicken curry':T==='ing'?'e.g. Basmati rice':'e.g. Cotton T-shirt'}' value='${esc(x.name)}'>`)}</div></div>
    <div id='xsug' class='pxs'></div>
    <div style='margin-top:12px'>${f('Description',`<textarea data-e='desc' rows='2' placeholder='Optional. Shown on your product list.'>${esc(x.desc)}</textarea>`)}</div>
    <div class='g2' style='margin-top:12px'>${f('Category',`<select data-e='cat'><option value=''>No category</option>${S.cats.map(c=>`<option ${x.cat===c?'selected':''}>${esc(c)}</option>`).join('')}${x.cat&&!S.cats.includes(x.cat)?`<option selected>${esc(x.cat)}</option>`:''}</select>`)}${f('Brand',`<input data-e='brand' list='xbr' placeholder='Optional' value='${esc(x.brand)}'><datalist id='xbr'>${brs.map(b=>`<option value='${esc(b)}'>`).join('')}</datalist>`)}</div>
    <div style='margin-top:12px'>${f('Supplier',`<input data-e='sup' list='xsp' placeholder='Optional' value='${esc(x.sup)}'><datalist id='xsp'>${sup.map(b=>`<option value='${esc(b)}'>`).join('')}</datalist>`)}</div>
   </div>
 
+  ${xDishCards(x,T)}
   ${T==='kit'?`<div class='pxc'><div class='pxk'>Bundle contents</div><p class='sub' style='font-size:13px;margin:0 0 8px'>Selling the bundle takes these products out of stock. Its stock is however many complete bundles you can make.</p>
    ${x.kit.map((c,i)=>`<div class='pxr'><select data-xkp='${i}'><option value=''>Choose product</option>${comps.map(p=>`<option value='${p.id}' ${String(p.id)===String(c.id)?'selected':''}>${esc(p.name)}</option>`).join('')}</select><input type='number' min='0' step='any' inputmode='decimal' data-xkq='${i}' value='${esc(c.q)}' aria-label='Quantity'><button type='button' ${red} data-xkrm='${i}' aria-label='Remove'>&times;</button></div>`).join('')}
    <button class='lnk' type='button' data-xkadd>+ Add product</button>
    ${kitTotal>0?`<p class='sub' style='font-size:13px;margin:10px 0 0'>Bought separately these cost ${m(kitTotal)}${kitCost>0?`. Your cost is ${m(kitCost)} <button class='lnk' type='button' data-xkcost>Use as cost</button>`:''}</p>`:''}</div>`:''}
 
-  <div class='pxc'><div class='pxk'>Pricing</div>
-   <div class='g2'>${f(T==='kg'?'Price per kg (MVR)':gstOn()?'Selling price (MVR, GST included)':'Selling price (MVR)',num(x.price,`data-e='price' data-xp`))}${pro?f('Cost price (MVR)',num(x.cost||'',`data-e='cost' data-xp`)):f('Cost price (MVR)',`<input disabled placeholder='Pro'>`)}</div>
+  <div class='pxc${T==='ing'?' pxhide':''}'><div class='pxk'>Pricing</div>
+   <div class='g2'>${f(T==='kg'?'Price per kg (MVR)':gstOn()?'Selling price (MVR, GST included)':'Selling price (MVR)',num(x.price,`data-e='price' data-xp`))}${T==='dish'&&x.rcp.length?f('Cost from recipe (MVR)',`<input disabled value='${esc(x.cost||'')}'>`):pro?f('Cost price (MVR)',num(x.cost||'',`data-e='cost' data-xp`)):f('Cost price (MVR)',`<input disabled placeholder='Pro'>`)}</div>
    <div id='xpc' class='pxcalc'>${xCalc(x)}</div>
    ${pro?`<div class='pxmk'><span>Set the price from your margin</span><input type='number' min='0' inputmode='decimal' placeholder='%' id='xmk' aria-label='Markup percent'><button type='button' class='lnk' data-xmk>Apply</button></div>`:''}
    <div style='margin-top:12px${gstOn()?'':';display:none'}'>${f('GST on this product',`<select data-e='tax' data-xp><option value=''>Standard (GST at ${S.gst}%)</option><option value='zero' ${x.tax==='zero'?'selected':''}>Zero-rated (0% GST)</option><option value='exempt' ${x.tax==='exempt'?'selected':''}>Exempt (no GST)</option></select>`)}</div>
@@ -4931,11 +4940,11 @@ function editor(){
    <div style='margin-top:12px'>${f('Usual reorder quantity',num(x.rq,`data-e='rq'`,'Optional'))}</div>
    ${T==='batch'?`<p class='sub pxh'>Add batches and expiry dates from Inventory after you save.</p>`:T==='serial'?`<p class='sub pxh'>Add serial numbers from Inventory after you save.</p>`:''}</div>`:''}
 
-  <div class='pxc'><div class='pxk'>Identifiers</div>
+  <div class='pxc${T==='dish'||T==='ing'?' pxhide':''}'><div class='pxk'>Identifiers</div>
    <div class='g2'>${f('SKU',`<div class='pxi'><input data-e='sku' placeholder='e.g. TS-001' value='${esc(x.sku||'')}'><button type='button' data-xsku>Auto</button></div>`)}${f('Barcode',`<div class='pxi'><input data-e='barcode' inputmode='numeric' placeholder='Scan or type' value='${esc(x.barcode||'')}'><button type='button' data-xbc>Generate</button></div>`)}</div>
    <p class='sub pxh'>No barcode on the item? Generate one, then print it on a label.</p></div>
 
-  ${T==='kg'||hv||T==='svc'||T==='kit'?'':`<div class='pxc'><div class='pxk'>Pack sizes<button type='button' data-apk>+ Add pack</button></div>${x.packs&&x.packs.length?`<div style='margin-top:4px'>${f('Single unit name',`<input data-e='bu' value='${esc(x.bu||'')}' placeholder='e.g. Bottle'>`)}</div><p class='sub' style='font-size:13px;margin:8px 0 0'>Stock is counted in single units, and the price above is the price of one single unit. Selling one pack removes its units from stock.</p>`:`<p class='sub' style='font-size:13px;margin:0'>Optional. Sell the same stock by the case, box or dozen, each with its own price.</p>`}${(x.packs||[]).map((k,i)=>`<div class='card' style='padding:14px;margin:12px 0;background:var(--bg)'><div class='hd' style='font-size:15px;margin-bottom:8px'>Pack ${i+1}<button ${red} data-rpk='${i}'>Remove</button></div><div class='g2'>${f('Pack name',`<input data-ek='${i}:name' placeholder='e.g. Case' value='${esc(k.name)}'>`)}${f('Units in pack',num(k.qty,`data-ek='${i}:qty'`,'12'))}</div><div class='g2' style='margin-top:10px'>${f('Pack price (MVR)',num(k.price,`data-ek='${i}:price'`))}${f('Pack barcode',`<input data-ek='${i}:barcode' inputmode='numeric' value='${esc(k.barcode||'')}'>`)}</div><div style='margin-top:10px'>${f('Pack SKU',`<input data-ek='${i}:sku' value='${esc(k.sku||'')}'>`)}</div></div>`).join('')}</div>`}
+  ${T==='kg'||hv||T==='svc'||T==='kit'||T==='dish'||T==='ing'?'':`<div class='pxc'><div class='pxk'>Pack sizes<button type='button' data-apk>+ Add pack</button></div>${x.packs&&x.packs.length?`<div style='margin-top:4px'>${f('Single unit name',`<input data-e='bu' value='${esc(x.bu||'')}' placeholder='e.g. Bottle'>`)}</div><p class='sub' style='font-size:13px;margin:8px 0 0'>Stock is counted in single units, and the price above is the price of one single unit. Selling one pack removes its units from stock.</p>`:`<p class='sub' style='font-size:13px;margin:0'>Optional. Sell the same stock by the case, box or dozen, each with its own price.</p>`}${(x.packs||[]).map((k,i)=>`<div class='card' style='padding:14px;margin:12px 0;background:var(--bg)'><div class='hd' style='font-size:15px;margin-bottom:8px'>Pack ${i+1}<button ${red} data-rpk='${i}'>Remove</button></div><div class='g2'>${f('Pack name',`<input data-ek='${i}:name' placeholder='e.g. Case' value='${esc(k.name)}'>`)}${f('Units in pack',num(k.qty,`data-ek='${i}:qty'`,'12'))}</div><div class='g2' style='margin-top:10px'>${f('Pack price (MVR)',num(k.price,`data-ek='${i}:price'`))}${f('Pack barcode',`<input data-ek='${i}:barcode' inputmode='numeric' value='${esc(k.barcode||'')}'>`)}</div><div style='margin-top:10px'>${f('Pack SKU',`<input data-ek='${i}:sku' value='${esc(k.sku||'')}'>`)}</div></div>`).join('')}</div>`}
 
   ${T==='var'||hv?`<div class='pxc'><div class='pxk'>Variants${pro||hv?`<button type='button' data-av>+ Add ${vl.toLowerCase()}</button>`:''}</div>
   <div class='g2'>${f('Variant type',`<input data-e='vlabel' value='${esc(x.vlabel)}' placeholder='e.g. Size'>`)}${hs?f('Sub-variant type',`<input data-e='slabel' value='${esc(x.slabel)}' placeholder='e.g. Colour'>`):''}</div>
@@ -4962,6 +4971,8 @@ function editor(){
     else if(t==='kg'){x.ns=false;x.kit=[];x.unit='kg';x.trk='';x.packs=[]}
     else if(t==='batch'||t==='serial'){x.ns=false;x.kit=[];x.unit='';x.trk=t}
     else if(t==='kit'){x.ns=false;x.unit='';x.trk='';x.packs=[];if(!x.kit.length)x.kit=[{id:'',q:'1'}]}
+    else if(t==='dish'){x.ns=false;x.kit=[];x.unit='';x.trk='';x.packs=[]}
+    else if(t==='ing'){x.ns=false;x.kit=[];x.unit='';x.trk='';x.packs=[];x.price=''}
     else if(t==='svc'){x.ns=true;x.kit=[];x.unit='';x.trk='';x.packs=[];x.stock=''}
     if(t!=='svc')x.ns=false;
     rerender();
@@ -5162,10 +5173,10 @@ function rxPick(){saveCur();const T=rxTbls(),busy=n=>{const i=carts.findIndex(c=
   $('#m').innerHTML=`<div class='modal'><div><div class='hd'>Choose a table</div><div class='rxg'>${T.map(n=>{const i=busy(n);return `<button class='rxt ${i>=0?'busy':''}' data-rxtb='${esc(n)}'><b>${esc(n)}</b><small>${i>=0?m(tot_(carts[i])):'Free'}</small></button>`}).join('')}<button class='rxt' data-rxtb='Takeaway'><b>Takeaway</b><small>New order</small></button></div>
   ${mgr()?`<div class='add' style='margin-top:14px'><input id='rxtn' placeholder='Add a table (e.g. Garden 1)'><button class='go' data-rxtadd>Add</button></div><div class='rxrm'>${T.map(n=>busy(n)>=0?'':`<span>${esc(n)}<button data-rxtdel='${esc(n)}' aria-label='Remove'>×</button></span>`).join('')}</div>`:''}</div></div>`}
 function rxOpen(n){saveCur();const cur=carts[acx];
-  if(n!=='Takeaway'){const i=carts.findIndex(c=>c.tb===n);if(i>=0){$('#m').innerHTML='';switchCart(i);return}}
+  if(n!=='Takeaway'){const i=carts.findIndex(c=>c.tb===n);if(i>=0){$('#m').innerHTML='';if(tab!=='pos'){tab='pos';usv='items'}switchCart(i);return}}
   if(!(cur.cart.length===0&&!cur.tb))newCartTab();
   const c=carts[acx];c.tb=n==='Takeaway'?'Takeaway '+Math.random().toString(36).slice(2,5).toUpperCase():n;if(S.svcp>0&&S.svcdef!==false&&n!=='Takeaway')c.svc=true;
-  $('#m').innerHTML='';usv='items';rxPersist();render()}
+  $('#m').innerHTML='';if(tab!=='pos')tab='pos';usv='items';rxPersist();render()}
 function rxNote(i){const l=cart[i];if(!l)return;RX.ni=i;const q=['No onion','Extra spicy','Less sugar','No ice','Well done','Takeaway pack'];
   $('#m').innerHTML=`<div class='modal'><div><div class='hd'>Note for ${esc(l.name)}</div><input id='rxnv' value='${esc(l.nt||'')}' placeholder='e.g. no onion, extra spicy'><div class='rxq'>${q.map(x=>`<button class='rxch' data-rxnq='${esc(x)}'>${x}</button>`).join('')}</div><button class='go' style='margin-top:12px' data-rxnsave>Save note</button></div></div>`}
 function rxKitchen(){const c=carts[acx]||{},L=cart.filter(l=>!l.sv&&l.qty>(l.sent||0));if(!L.length){toast('Nothing new to send to the kitchen.');return}
@@ -6581,6 +6592,100 @@ async function rxPull(){if(!rxShared()||RXS.pulling||RXS.busy)return;if(rxPlan()
 function rxStartSync(){if(RXS.sub||!rxShared())return;RXS.sub=1;
   try{sbc.channel('rx_'+cl.shop).on('postgres_changes',{event:'*',schema:'public',table:'open_orders',filter:'shop_id=eq.'+cl.shop},()=>rxPullSoon()).on('postgres_changes',{event:'INSERT',schema:'public',table:'table_orders',filter:'shop_id=eq.'+cl.shop},()=>{if(typeof rxFetch==='function')rxFetch()}).subscribe()}catch(e){}}
 setInterval(()=>{if(rxShared()){rxStartSync();rxPull()}},4000);
+/* ===== v28: restaurant menu items (dishes, ingredients) and restaurant dashboard ===== */
+const XTAGS=['Vegetarian','Vegan','Spicy','Halal','Contains nuts','Contains seafood','Gluten free'];
+const XUNITS=['kg','g','L','ml','pcs','pack'];
+function xRecipeCost(x){return(x.rcp||[]).reduce((a,r)=>{const q=S.products.find(y=>y.id==r.id);return a+(q?(q.cost||0)*(+r.q||0):0)},0)}
+function xPortions(x){let mn=Infinity;for(const r of(x.rcp||[])){const q=S.products.find(y=>y.id==r.id);if(!q||!(+r.q>0))return null;mn=Math.min(mn,Math.floor((+q.stock+1e-9)/(+r.q)))}return isFinite(mn)?Math.max(0,mn):null}
+function xDishCards(x,T){
+  const f=(lab,inp,cl)=>`<div${cl?` class='${cl}'`:''}><span class='fl'>${lab}</span>${inp}</div>`,red="style='color:var(--acc)'";
+  if(T==='ing')return `<div class='pxc'><div class='pxk'>Unit and cost</div><div class='g2'>${f('Counted in',`<select data-e='iu'>${XUNITS.map(u=>`<option ${x.iu===u?'selected':''}>${u}</option>`).join('')}</select>`)}${f('Cost per '+esc(x.iu||'unit')+' (MVR)',`<input type='number' min='0' step='any' inputmode='decimal' data-e='cost' value='${esc(x.cost||'')}' placeholder='0.00'>`)}</div><p class='sub pxh'>Stock below is counted in this unit. Use it in recipes to work out the cost of each dish.</p></div>`;
+  if(T!=='dish')return '';
+  const ings=S.products.filter(p=>p.ing&&p.id!==x.id),pro=isPro(),cost=xRecipeCost(x),por=xPortions(x),uOf=id=>{const q=S.products.find(y=>y.id==id);return q?(q.iu||'unit'):''};
+  const recipe=!pro?`<p class='sub' style='font-size:13px;margin:0'>Recipes work out your cost per dish and take ingredients out of stock when you sell it. They are on the Pro plan. You can still sell this dish without one.</p>`
+   :!ings.length&&!x.rcp.length?`<p class='sub' style='font-size:13px;margin:0'>No ingredients yet. Add ingredients first by choosing <b>Ingredient</b> as the type when adding a product, then come back to build the recipe.</p>`
+   :`<p class='sub' style='font-size:13px;margin:0 0 8px'>List what goes into one portion. Every sale takes these out of stock.</p>${x.rcp.map((r,i)=>`<div class='pxr'><select data-xdp='${i}'><option value=''>Choose ingredient</option>${ings.map(p=>`<option value='${p.id}' ${String(p.id)===String(r.id)?'selected':''}>${esc(p.name)}</option>`).join('')}</select><input type='number' min='0' step='any' inputmode='decimal' data-xdq='${i}' value='${esc(r.q)}' aria-label='Quantity per portion' placeholder='Qty'><span class='pxu'>${esc(uOf(r.id))}</span><button type='button' ${red} data-xdrm='${i}' aria-label='Remove'>&times;</button></div>`).join('')}<button class='lnk' type='button' data-xdadd>+ Add ingredient</button>${x.rcp.length?`<p class='sub' style='font-size:13px;margin:10px 0 0'>Cost per portion <b>${m(cost)}</b>${por!=null?` · You can make <b>${por}</b> portion${por===1?'':'s'} with today's stock`:''}</p>`:''}`;
+  return `<div class='pxc'><div class='pxk'>Recipe</div>${recipe}</div>
+  <div class='pxc'><div class='pxk'>Dish details</div>
+   <div class='g2'>${f('Prep time (minutes)',`<input type='number' min='0' inputmode='numeric' data-e='prep' value='${esc(x.prep||'')}' placeholder='Optional'>`)}${f('Prepared at',`<select data-e='stn'><option value=''>Kitchen</option><option value='bar' ${x.stn==='bar'?'selected':''}>Bar</option></select>`)}</div>
+   <span class='fl' style='margin-top:12px;display:block'>Tags</span><div class='rxq' style='margin-top:6px'>${XTAGS.map(t=>`<button type='button' class='rxch ${(x.tags||[]).includes(t)?'on':''}' data-xdt='${esc(t)}'>${t}</button>`).join('')}</div>
+   <label class='pxtg' style='margin-top:12px'><input type='checkbox' data-xdo ${x.off?'':'checked'}><span><b>Available now</b><small>Switch off when the kitchen runs out. It shows as unavailable at the till and on the QR menu.</small></span></label>
+  </div>
+  <div class='pxc'><div class='pxk'>Add-ons<button type='button' data-xmadd>+ Add</button></div>${(x.mods||[]).length?'':`<p class='sub' style='font-size:13px;margin:0'>Optional extras guests can add, such as extra cheese or a fried egg. The waiter picks them at the till.</p>`}${(x.mods||[]).map((o,i)=>`<div class='pxr'><input data-xmn='${i}' placeholder='e.g. Extra cheese' value='${esc(o.n)}'><input type='number' min='0' step='any' inputmode='decimal' data-xmp='${i}' placeholder='+ MVR' value='${esc(o.pr)}' aria-label='Extra price'><button type='button' ${red} data-xmrm='${i}' aria-label='Remove'>&times;</button></div>`).join('')}</div>`}
+(function(){
+  const live=()=>typeof dr!=='undefined'&&dr&&document.querySelector('.pxm');
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-xdadd],[data-xdrm],[data-xmadd],[data-xmrm],[data-xdt]');if(!b||!live())return;const d=b.dataset,x=dr;
+    if('xdadd' in d)x.rcp.push({id:'',q:''});else if(d.xdrm!==undefined)x.rcp.splice(+d.xdrm,1);
+    else if('xmadd' in d)x.mods.push({n:'',pr:''});else if(d.xmrm!==undefined)x.mods.splice(+d.xmrm,1);
+    else if(d.xdt){const i=x.tags.indexOf(d.xdt);if(i>=0)x.tags.splice(i,1);else x.tags.push(d.xdt)}
+    editor()},true);
+  document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||!live())return;const d=t.dataset;
+    if(d.xdp!==undefined){dr.rcp[+d.xdp].id=t.value===''?'':+t.value;setTimeout(editor,0)}
+    else if(d.xdq!==undefined){dr.rcp[+d.xdq].q=t.value;setTimeout(editor,0)}
+    else if('xdo' in d){dr.off=!t.checked}},true);
+  document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset||!live())return;const d=t.dataset;
+    if(d.xmn!==undefined)dr.mods[+d.xmn].n=t.value;else if(d.xmp!==undefined)dr.mods[+d.xmp].pr=t.value;else if(d.xdq!==undefined)dr.rcp[+d.xdq].q=t.value},true);
+  const _xs=xsave;xsave=function(p,x){_xs(p,x);const T=x.ty;delete p.dish;delete p.ing;
+    if(T==='dish'){p.dish=1;const R=(x.rcp||[]).filter(r=>r.id&&+r.q>0).map(r=>({id:+r.id,q:+r.q}));
+      if(R.length){p.kit=R;delete p.ns;p.cost=Math.round(xRecipeCost({rcp:R})*100)/100}else{delete p.kit;p.ns=true;p.stock=1e6}
+      const M=(x.mods||[]).filter(o=>(o.n||'').trim()).map(o=>({n:o.n.trim(),pr:Math.max(0,+o.pr||0)}));if(M.length)p.mods=M;else delete p.mods;
+      const pt=Math.max(0,Math.round(+x.prep)||0);if(pt)p.prep=pt;else delete p.prep;if(x.stn==='bar')p.stn='bar';else delete p.stn;
+      if((x.tags||[]).length)p.tags=x.tags.slice();else delete p.tags;if(x.off)p.off=true;else delete p.off}
+    else{delete p.mods;delete p.prep;delete p.stn;delete p.tags;delete p.off}
+    if(T==='ing'){p.ing=1;p.iu=x.iu||'kg';p.price=0;delete p.ns;delete p.kit}else delete p.iu;
+    kitSync()};
+  /* add-ons chosen at the till */
+  const _al=addLine;addLine=function(p,vi,si){if(typeof rxOn==='function'&&rxOn()&&p&&p.mods&&p.mods.length&&vi==null&&!RXM.skip){rxModAsk(p);return}return _al.apply(this,arguments)};
+})();
+const RXM={skip:0,p:null};
+function rxModAsk(p){RXM.p=p;$('#m').innerHTML=`<div class='modal'><div><div class='hd'>${esc(p.name)}</div><p class='sub' style='margin:0 0 8px'>${m(p.price)}</p>${p.mods.map((o,i)=>`<label class='pxtg'><input type='checkbox' data-rxmo='${i}'><span><b>${esc(o.n)}</b>${o.pr>0?`<small>+ ${m(o.pr)}</small>`:''}</span></label>`).join('')}<span class='fl' style='margin-top:12px;display:block'>Note for the kitchen</span><input id='rxmn' maxlength='80' placeholder='Optional, e.g. no onion'><button class='go' style='margin-top:14px' data-rxmadd>Add to order</button></div></div>`}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rxmadd]');if(!b||!RXM.p)return;const p=RXM.p,ch=[...document.querySelectorAll('[data-rxmo]:checked')].map(c=>p.mods[+c.dataset.rxmo]),extra=ch.reduce((a,o)=>a+(+o.pr||0),0),note=($('#rxmn').value||'').trim();
+  const nt=[...ch.map(o=>'+ '+o.n),note].filter(Boolean).join(', '),price=Math.round((p.price+extra)*100)/100,n=node({id:p.id});
+  if(!n||usedUnits(p.id)>=n.stock){toast('Unavailable right now.',1);return}
+  const l=cart.find(x=>x.id===p.id&&x.price===price&&(x.nt||'')===nt&&!x.pk);
+  if(l)l.qty++;else cart.push({id:p.id,vi:undefined,si:undefined,name:p.name,price,cost:p.cost||0,cat:p.cat||'',tx:p.tax||'',qty:1,...(nt?{nt}:{})});
+  RXM.p=null;$('#m').innerHTML='';lines();toast('Added: '+p.name)},true);
+/* ---------- restaurant dashboard ---------- */
+const RXD={dfl:null,sig:''};
+function rxDash(){
+  const D=864e5,t0=dayStart(Date.now()),L=S.inv,td=L.filter(i=>inR(i,t0,t0+D)),bills=td.filter(i=>!i.cn),sales=td.reduce((a,i)=>a+i.total,0),avg=bills.length?bills.reduce((a,i)=>a+i.total,0)/bills.length:0;
+  const svc=bills.reduce((a,i)=>a+i.items.filter(l=>l.sv).reduce((b,l)=>b+l.price*l.qty,0),0);
+  const open=carts.filter(c=>c.tb&&c.cart.length),openVal=open.reduce((a,c)=>a+c.cart.reduce((b,l)=>b+lt(l),0),0),FA=rxFl().filter(f=>f.k!=='l'),FL=rxFloors();
+  if(!FL.some(x=>x.id===RXD.dfl))RXD.dfl=FL[0].id;
+  const first=(me.name||'').split(' ')[0],hr=new Date().getHours(),gr=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  const seg=`<div class='seg fit' style='margin-bottom:16px'><button class='on' data-v3dv='ov'>Restaurant</button><button data-v3dv='det'>Detailed</button></div>`;
+  const kp=(l,v,s)=>`<div class='kpi'><span>${l}</span><div><b>${v}</b></div>${s?`<small class='sub'>${s}</small>`:''}</div>`;
+  const kpis=`<div class='exk'>${kp('Sales today',m(sales),bills.length+' bill'+(bills.length===1?'':'s'))}${kp('Average bill',m(avg),svc>0?'Service charge '+m(svc):'')}${kp('Tables in use',open.length+(FA.length?' of '+FA.length:''),open.length?m(openVal)+' on the tables':'All tables free')}${kp('QR orders waiting',RXQ.inc.length,S.menuOn?'':'Menu is off')}</div>`;
+  const inc={};RXQ.inc.forEach(o=>{inc[o.tbl]=(inc[o.tbl]||0)+1});
+  const items=FA.filter(f=>rxFof(f)===RXD.dfl).map(f=>{const c=carts.find(x=>x.tb===dname(f.n)&&x.cart.length),tt=c?c.cart.reduce((a,l)=>a+lt(l),0):null,ic_=inc[f.n]||0;
+    return `<button class='fti tb ${f.sh||'sq'} ${tt!=null?'busy':''} ${ic_?'inc':''}' data-rxtb='${esc(dname(f.n))}' style='left:${f.x}%;top:${f.y}%;width:${f.w}%;height:${f.h}%'><b>${esc(f.n)}</b>${tt!=null?`<small>${Math.round(tt)}</small>`:''}${ic_?`<i class='rxdot'>${ic_}</i>`:''}</button>`}).join('');
+  const labs=rxFl().filter(f=>f.k==='l'&&rxFof(f)===RXD.dfl).map(f=>`<div class='fti lab' style='left:${f.x}%;top:${f.y}%;width:${f.w}%;height:${f.h}%'><span>${esc(f.n)}</span></div>`).join('');
+  const floor=`<div class='card'><div class='nsh'><div class='hd' style='margin:0'>Floor now</div>${mgr()?`<button class='lnk' data-rdedit>Edit layout</button>`:''}</div>${FL.length>1?`<div class='rxtop'>${FL.map(x=>`<button class='rxch ${x.id===RXD.dfl?'on':''}' data-rdfl='${x.id}'>${esc(x.name)}</button>`).join('')}</div>`:''}
+   ${FA.length?`<div class='rxcv'>${items}${labs}</div><p class='sub' style='margin:8px 0 0'>Red tables have an open order. Tap one to open it.</p>`:`<div class='empty'>No tables yet.${mgr()?` <button class='lnk' data-rdedit>Set up your floor</button>`:''}</div>`}</div>`;
+  const acts=`<div class='card'><div class='hd' style='font-size:15px'>Quick actions</div><div class='rxtop' style='margin:8px 0 0'><button class='rxch on' data-rdgo='floor'>Open a table</button><button class='rxch' data-rxtb='Takeaway'>New takeaway</button>${RXQ.inc.length?`<button class='rxch on' data-rxinbox>QR orders (${RXQ.inc.length})</button>`:''}<button class='rxch' data-nv='pr'>Menu items</button><button class='rxch' data-nv='ivt'>Ingredients</button></div></div>`;
+  const openL=`<div class='card'><div class='hd' style='font-size:15px'>On the tables</div>${open.length?`<div class='flst' style='margin-top:6px'>${open.map(c=>{const n=c.cart.filter(l=>!l.sv).reduce((a,l)=>a+l.qty,0),w=c.cart.filter(l=>!l.sv&&l.qty>(l.sent||0)).length;return `<div class='exr' data-rxtb='${esc(c.tb)}'><div class='exi'><span>${esc(String(c.tb).replace(/^Table\s+/,'')[0]||'?')}</span></div><div class='exd'><b>${esc(c.tb)}</b><small>${+n.toFixed(2)} item${n===1?'':'s'}${w?' · '+w+' not sent to the kitchen':''}</small></div><b class='exa'>${m(c.cart.reduce((a,l)=>a+lt(l),0))}</b></div>`}).join('')}</div>`:`<div class='empty'>No open orders right now.</div>`}</div>`;
+  const by={};bills.forEach(i=>i.items.forEach(l=>{if(l.sv)return;const o=by[l.name]||(by[l.name]={q:0,r:0});o.q+=l.qty;o.r+=l.price*l.qty}));
+  const top=Object.entries(by).sort((a,b)=>b[1].q-a[1].q).slice(0,6),mxq=top.length?top[0][1].q:1;
+  const topH=`<div class='card'><div class='hd' style='font-size:15px'>Top dishes today</div>${top.length?top.map(([k,v])=>`<div class='exb'><div><span>${esc(k)}</span><b>${+v.q.toFixed(2)} sold</b></div><i style='width:${Math.max(4,v.q/mxq*100)}%'></i></div>`).join(''):`<div class='empty'>No sales yet today.</div>`}</div>`;
+  const hrs=Array(24).fill(0);bills.forEach(i=>{hrs[new Date(i.at).getHours()]+=i.total});const nz=hrs.map((v,h)=>v>0?h:-1).filter(h=>h>=0),h0=Math.max(0,Math.min(nz.length?nz[0]:8,hr)-0),h1=Math.min(23,Math.max(nz.length?nz[nz.length-1]:hr,hr)),hh=[];for(let h=Math.min(h0,hr);h<=Math.max(h1,hr);h++)hh.push(h);const hm=Math.max(1,...hh.map(h=>hrs[h]));
+  const hourH=`<div class='card'><div class='hd' style='font-size:15px'>Sales by hour</div><div class='exm'>${hh.map(h=>`<div><i style='height:${Math.max(3,hrs[h]/hm*100)}%${h===hr?';opacity:1':''}' title='${m(hrs[h])}'></i><small>${h%12||12}${h<12?'a':'p'}</small></div>`).join('')}</div></div>`;
+  const pm={};bills.forEach(i=>(i.pays||[]).forEach(p=>{pm[p.m]=(pm[p.m]||0)+p.a}));const pe=Object.entries(pm).sort((a,b)=>b[1]-a[1]),pmx=pe.length?pe[0][1]:1;
+  const payH=`<div class='card'><div class='hd' style='font-size:15px'>Payments today</div>${pe.length?pe.map(([k,v])=>`<div class='exb'><div><span>${esc(k)}</span><b>${m(v)}</b></div><i style='width:${Math.max(4,v/pmx*100)}%'></i></div>`).join(''):`<div class='empty'>No payments yet.</div>`}</div>`;
+  const days=[];for(let k=6;k>=0;k--){const f=t0-k*D;days.push([new Date(f).toLocaleDateString('en-GB',{weekday:'short'}),L.filter(i=>inR(i,f,f+D)).reduce((a,i)=>a+i.total,0)])}const dm=Math.max(1,...days.map(d=>d[1]));
+  const weekH=`<div class='card'><div class='hd' style='font-size:15px'>Last 7 days</div><div class='exm'>${days.map((d,i)=>`<div><i style='height:${Math.max(3,d[1]/dm*100)}%;${i===6?'opacity:1':''}' title='${m(d[1])}'></i><small>${d[0]}</small></div>`).join('')}</div></div>`;
+  const low=S.products.filter(p=>p.ing&&(p.stock<=0||(p.rl>0&&p.stock<=p.rl))).sort((a,b)=>a.stock-b.stock).slice(0,6),off=S.products.filter(p=>p.dish&&(p.off||(!p.ns&&p.stock<=0)));
+  const lowH=`<div class='card'><div class='hd' style='font-size:15px'>Running low</div>${low.length?`<div class='flst' style='margin-top:6px'>${low.map(p=>`<div class='exr' data-nv='ivt'><div class='exd'><b>${esc(p.name)}</b><small>${p.stock<=0?'Out of stock':'Reorder level '+p.rl+' '+esc(p.iu||'')}</small></div><b class='exa ${p.stock<=0?'exred':''}'>${+(+p.stock).toFixed(2)} ${esc(p.iu||'')}</b></div>`).join('')}</div>`:`<div class='empty'>Ingredients are well stocked.</div>`}${off.length?`<p class='sub' style='margin:10px 0 0'>Unavailable dishes: ${off.slice(0,6).map(p=>esc(p.name)).join(', ')}${off.length>6?'…':''}</p>`:''}</div>`;
+  $('#app').innerHTML=`<div class='gr'>${gr}, ${esc(first)}</div><p class='sub' style='margin:2px 0 14px'>${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>${seg}${kpis}<div class='exg'>${floor}<div>${acts}<div style='height:12px'></div>${openL}</div></div><div class='exg' style='margin-top:12px'>${topH}${hourH}</div><div class='exg' style='margin-top:12px'>${payH}${weekH}</div><div style='margin-top:12px'>${lowH}</div>`;
+  RXD.sig=rxDashSig();
+}
+const rxDashSig=()=>JSON.stringify([S.inv.length,carts.filter(c=>c.tb&&c.cart.length).map(c=>c.tb+c.cart.length+c.cart.reduce((a,l)=>a+l.qty,0)),RXQ.inc.length,RXD.dfl,new Date().getHours()]);
+(function(){const _ov=ov;ov=function(){if(typeof rxOn==='function'&&rxOn()&&can('invview')&&!(typeof udv!=='undefined'&&udv==='det')){rxDash();return}return _ov.apply(this,arguments)};
+  setInterval(()=>{if(tab==='ov'&&rxOn()&&can('invview')&&typeof udv!=='undefined'&&udv!=='det'&&!document.querySelector('#m .modal')&&RXD.sig!==rxDashSig()){try{ov()}catch(e){}}},4000)})();
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-rdfl],[data-rdedit],[data-rdgo]');if(!t)return;const d=t.dataset;
+  if(d.rdfl){RXD.dfl=+d.rdfl;rxDash();return}
+  if('rdedit' in d){RXQ.edit=1;RXQ.sel=null;rxFloor();return}
+  if(d.rdgo==='floor'){rxFloor();return}
+});
 
 if(new URLSearchParams(location.search).has('menu'))cmBoot();else if(CLOUD)cloudBoot();else render();
 </script>
