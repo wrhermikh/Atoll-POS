@@ -1400,7 +1400,7 @@ function pr(){
 }
 function leaves(p){const o=[];(p.variants||[]).forEach((v,vi)=>{const vp=v.price!=null?v.price:p.price;if(v.subs&&v.subs.length)v.subs.forEach((s,si)=>o.push({vi,si,price:s.price!=null?s.price:vp,stock:s.stock}));else o.push({vi,price:vp,stock:v.stock})});return o}
 const minPrice=p=>Math.min(...leaves(p).map(x=>x.price));
-const pstock=p=>p.off?0:p.kit&&p.kit.length?kitStock(p):p.variants&&p.variants.length?leaves(p).reduce((a,x)=>a+x.stock,0):p.stock;
+const pstock=p=>p.off?0:p.dish&&p.ns?p.stock:p.kit&&p.kit.length?kitStock(p):p.variants&&p.variants.length?leaves(p).reduce((a,x)=>a+x.stock,0):p.stock;
 function node(l){const p=S.products.find(x=>x.id===l.id);if(!p)return null;if(l.vi==null)return p;const v=p.variants&&p.variants[l.vi];if(!v)return null;return l.si==null?v:((v.subs&&v.subs[l.si])||null)}
 function addLine(p,vi,si){
   const n=node({id:p.id,vi,si});if(!n)return;
@@ -1789,7 +1789,7 @@ function uRange(k){
   return({today:{f:t0,t:t0+D,pf:t0-D,pt:t0,l:'Today'},yest:{f:t0-D,t:t0,pf:t0-2*D,pt:t0-D,l:'Yesterday'},week:{f:w0,t:w0+7*D,pf:w0-7*D,pt:w0,l:'This week'},lweek:{f:w0-7*D,t:w0,pf:w0-14*D,pt:w0-7*D,l:'Last week'},month:{f:mo0,t:mo1,pf:pm0,pt:mo0,l:'This month'},lmonth:{f:pm0,t:mo0,pf:pp0,pt:pm0,l:'Last month'}})[k];
 }
 const UM={rev:['Revenue (excl. GST)',i=>i.total-i.gst],cost:['Cost of goods',i=>i.items.reduce((a,l)=>a+(l.cost||0)*l.qty,0),1],prof:['Profit',i=>i.total-i.gst-i.items.reduce((a,l)=>a+(l.cost||0)*l.qty,0),1],disc:['Discounts',i=>i.cn?0:(i.disc||0)],ref:['Refunds',i=>i.cn?-i.total:0],cnt:['Invoices',i=>i.cn?0:1],gst:['GST collected',i=>i.gst,1]};
-const stkPill=p=>{if(p.off)return "<span class='pill bad'>Unavailable</span>";if(p.ing){const s=+p.stock||0,u=' '+(p.iu||'');return s<=0?`<span class='pill bad'>Out of stock</span>`:p.rl>0&&s<=p.rl?`<span class='pill warn'>Low · ${+s.toFixed(3)}${u}</span>`:`<span class='pill ok'>${+s.toFixed(3)}${u}</span>`}if(p.dish&&p.ns)return "<span class='pill ok'>Available</span>";if(p.dish&&p.kit&&p.kit.length){const s=pstock(p);return s<=0?`<span class='pill bad'>Sold out</span>`:s<=5?`<span class='pill warn'>${s} portion${s===1?'':'s'} left</span>`:`<span class='pill ok'>${s} portions</span>`}if(p.ns)return "<span class='pill ok'>Service</span>";const s=pstock(p),u=p.unit==='kg'?' kg':'';return s<=0?`<span class='pill bad'>Out of stock</span>`:s<=5?`<span class='pill warn'>Low \u00b7 ${+s.toFixed(3)}${u}</span>`:`<span class='pill ok'>${+s.toFixed(3)}${u} in stock</span>`};
+const stkPill=p=>{if(p.off)return "<span class='pill bad'>Unavailable</span>";if(p.ing){const s=+p.stock||0,u=' '+(p.iu||'');return s<=0?`<span class='pill bad'>Out of stock</span>`:p.rl>0&&s<=p.rl?`<span class='pill warn'>Low · ${+s.toFixed(3)}${u}</span>`:`<span class='pill ok'>${+s.toFixed(3)}${u}</span>`}if(p.dish&&p.ns){if(p.kit&&p.kit.length){const s=kitStock(p);return s<=0?"<span class='pill warn'>Check ingredients</span>":s<=5?`<span class='pill warn'>${s} portion${s===1?'':'s'} left</span>`:"<span class='pill ok'>Available</span>"}return "<span class='pill ok'>Available</span>"}if(p.dish&&p.kit&&p.kit.length){const s=pstock(p);return s<=0?`<span class='pill bad'>Sold out</span>`:s<=5?`<span class='pill warn'>${s} portion${s===1?'':'s'} left</span>`:`<span class='pill ok'>${s} portions</span>`}if(p.ns)return "<span class='pill ok'>Service</span>";const s=pstock(p),u=p.unit==='kg'?' kg':'';return s<=0?`<span class='pill bad'>Out of stock</span>`:s<=5?`<span class='pill warn'>Low \u00b7 ${+s.toFixed(3)}${u}</span>`:`<span class='pill ok'>${+s.toFixed(3)}${u} in stock</span>`};
 /* ---------- dashboard ---------- */
 function uSteps(){return[
  ['Add your shop details',gstOn()?'Name, address and GST TIN':'Name and address',!!(S.shop&&S.addr&&(S.tin||!gstOn())),'set'],
@@ -6699,6 +6699,44 @@ function lpgRest(){
     ${C.map((c,i)=>`<article class='lpgxc' data-k='${c.k}'><div class='lpgxt'><span class='lpgxn'>${c.k}</span><h3>${c.h}</h3><p>${c.p}</p></div><div class='lpgxv'><div class='lpgxp'><img src='${c.u}' alt='${c.k}' width='250' height='500' loading='lazy' decoding='async'></div></div></article>`).join('')}
   </section>`;
 }
+/* ===== v30: dishes sell without ingredient stock; sample halal menu ===== */
+function kitSync(){S.products.forEach(p=>{if(p.dish&&p.kit&&p.kit.length){if(S.rxStrict){delete p.ns;p.stock=kitStock(p)}else{p.ns=true;p.stock=1e6}}else if(p.kit&&p.kit.length)p.stock=kitStock(p)})}
+const RXSM={ing:[['Basmati rice','kg',22,25,5],['Chicken (halal)','kg',58,15,4],['Fresh tuna','kg',70,12,3],['Beef (halal)','kg',95,8,2],['Eggs','pcs',3,120,30],['Flour','kg',14,30,5],['Coconut','pcs',7,40,10],['Onion','kg',18,20,5],['Chilli','kg',45,3,1],['Lime','kg',30,6,2],['Tea leaves','kg',120,2,.5],['Coffee beans','kg',180,3,.5],['Milk','l',24,20,5],['Sugar','kg',17,10,2],['Cooking oil','l',38,15,4]],
+ dish:[
+ ['Mas huni with roshi','Breakfast',45,8,[['Fresh tuna',.08],['Coconut',.25],['Onion',.03],['Chilli',.005],['Flour',.1]],[],[['Extra roshi',6]]],
+ ['Egg omelette with roshi','Breakfast',38,8,[['Eggs',2],['Onion',.02],['Flour',.08],['Cooking oil',.01]],[],[]],
+ ['Garudhiya','Mains',85,12,[['Basmati rice',.15],['Fresh tuna',.2],['Lime',.02],['Chilli',.005]],['Spicy'],[['Extra tuna',20]]],
+ ['Chicken curry and rice','Mains',95,15,[['Chicken (halal)',.22],['Basmati rice',.15],['Coconut',.2],['Onion',.05],['Chilli',.01]],['Spicy'],[['Extra rice',10]]],
+ ['Chicken biryani','Mains',110,18,[['Chicken (halal)',.25],['Basmati rice',.2],['Onion',.08],['Cooking oil',.02]],['Spicy'],[]],
+ ['Beef curry with roshi','Mains',120,18,[['Beef (halal)',.2],['Flour',.1],['Onion',.06],['Cooking oil',.02],['Chilli',.01]],['Spicy'],[]],
+ ['Grilled tuna steak','Mains',140,18,[['Fresh tuna',.25],['Lime',.03],['Cooking oil',.01]],[],[['Side salad',15]]],
+ ['Fried rice with chicken','Mains',75,12,[['Basmati rice',.2],['Chicken (halal)',.1],['Eggs',1],['Cooking oil',.02]],[],[]],
+ ['Bajiya (3 pcs)','Short eats',24,6,[['Flour',.06],['Fresh tuna',.04],['Coconut',.05],['Onion',.02],['Cooking oil',.02]],[],[]],
+ ['Gulha (3 pcs)','Short eats',22,6,[['Flour',.06],['Fresh tuna',.04],['Coconut',.05],['Cooking oil',.02]],[],[]],
+ ['Fresh lime juice','Drinks',25,3,[['Lime',.12],['Sugar',.02]],['Vegetarian'],[]],
+ ['Sai (tea with milk)','Drinks',12,3,[['Tea leaves',.005],['Milk',.08],['Sugar',.02]],['Vegetarian'],[]],
+ ['Coffee','Drinks',30,3,[['Coffee beans',.015],['Milk',.1]],[],[['Extra shot',8]]],
+ ['Bondibai','Desserts',35,5,[['Basmati rice',.06],['Coconut',.3],['Sugar',.04]],['Vegetarian'],[]]]};
+function rxSample(){const pro=isPro(),has=n=>S.products.some(p=>p.name===n);let id=Math.max(1000,...S.products.map(p=>+p.id||0))+1,ni=0,nd=0;const ids={};
+  ['Ingredients','Breakfast','Mains','Short eats','Drinks','Desserts'].forEach(c=>{if(!S.cats.includes(c))S.cats.push(c)});
+  if(pro)RXSM.ing.forEach(a=>{const e=S.products.find(p=>p.name===a[0]&&p.ing);if(e){ids[a[0]]=e.id;return}if(has(a[0]))return;const p={id:id++,name:a[0],price:0,cost:a[2],stock:a[3],rl:a[4],cat:'Ingredients',tax:'',ing:1,iu:a[1],smp:1};S.products.push(p);ids[a[0]]=p.id;ni++});
+  RXSM.dish.forEach(d=>{if(has(d[0]))return;const kit=pro?d[4].map(r=>({id:ids[r[0]],q:r[1]})).filter(r=>r.id):[];
+    const cost=kit.reduce((a,c)=>a+(S.products.find(p=>p.id===c.id).cost||0)*c.q,0),p={id:id++,name:d[0],price:d[2],cost:Math.round(cost*100)/100,stock:1e6,ns:true,cat:d[1],tax:'',dish:1,prep:d[3],smp:1};
+    if(kit.length)p.kit=kit;p.tags=['Halal',...d[5]];if(d[6].length)p.mods=d[6].map(o=>({n:o[0],pr:o[1]}));S.products.push(p);nd++});
+  kitSync();save();toast(nd||ni?'Added '+nd+' dishes'+(ni?' and '+ni+' ingredients':'')+'. Tap one to see how it is set up.':'The sample menu is already there.');if(pro===false)toast('Recipes are on the Pro plan, so the sample dishes have no recipes.');
+  try{render()}catch(e){}}
+function rxSampleDel(){const n=S.products.filter(p=>p.smp).length;if(!n||!confirm('Remove the '+n+' sample items? Anything you edited yourself is kept.'))return;const ids=new Set(S.products.filter(p=>p.smp).map(p=>p.id));
+  if(carts.some(c=>c.cart.some(l=>ids.has(l.id)))){toast('Close the open orders first.',1);return}S.products=S.products.filter(p=>!p.smp);kitSync();save();toast('Sample items removed.');try{render()}catch(e){}}
+(function(){const _xs=xsave;xsave=function(p,x){_xs(p,x);delete p.smp};
+  const sample=()=>S.products.some(p=>p.smp),none=()=>!S.products.some(p=>p.dish||p.ing);
+  const call=`<div class='card' id='rxsmp'><div class='hd' style='font-size:16px'>New to restaurant mode?</div><p class='sub' style='margin:0 0 10px'>Add a ready-made halal menu with its ingredients and recipes. Open any dish to see how it is built, then edit it, or add your own.</p><button class='go' style='margin:0' data-rxsample>Add sample halal menu</button></div>`;
+  const _pr=pr;pr=function(){_pr.apply(this,arguments);try{if(rxOn()&&none()&&can('prodedit')){const a=$('#app');if(a&&!document.getElementById('rxsmp'))a.insertAdjacentHTML('afterbegin',call)}}catch(e){}};
+  const _rd=rxDash;rxDash=function(){_rd.apply(this,arguments);try{if(none()&&can('prodedit')){const a=$('#app');if(a&&!document.getElementById('rxsmp'))a.insertAdjacentHTML('beforeend',call)}}catch(e){}};
+  const _s=setts;setts=function(){_s.apply(this,arguments);try{const c=document.getElementById('btcard');if(!c||!rxOn()||document.getElementById('rxsetx'))return;
+    c.insertAdjacentHTML('beforeend',`<div id='rxsetx' style='margin-top:14px;border-top:1px solid var(--ln);padding-top:12px'><label class='pxtg'><input type='checkbox' data-rxstrict ${S.rxStrict?'checked':''}><span>Stop selling a dish when its ingredients run out</span></label><p class='sub' style='margin:4px 0 0'>Off by default: dishes always sell, and the ingredients still count down so you see what is running low.</p><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:12px'><button class='ghost' data-rxsample>Add sample halal menu</button>${sample()?`<button class='ghost danger' data-rxsampledel>Remove sample items</button>`:''}</div></div>`)}catch(e){}};
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rxsample],[data-rxsampledel]');if(!b)return;if('rxsample' in b.dataset){if(can('prodedit'))rxSample()}else rxSampleDel()});
+  document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&'rxstrict' in t.dataset){S.rxStrict=t.checked;kitSync();save();toast(t.checked?'Dishes stop selling when ingredients run out.':'Dishes always sell.')}});
+})();
 
 if(new URLSearchParams(location.search).has('menu'))cmBoot();else if(CLOUD)cloudBoot();else render();
 </script>
