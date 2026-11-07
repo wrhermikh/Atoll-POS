@@ -970,8 +970,15 @@ body.cm>*:not(#cmenu){display:none!important}
 .kdsi{padding:4px 0;font-size:15px}.kdsi.v{text-decoration:line-through;opacity:.55}.kdsn{margin-left:8px;font-size:11px;opacity:.6}.kdsnt{font-size:13px;color:#b45309;margin-left:14px}
 .kdst .go{margin-top:8px;padding:10px}
 .kdsl{display:flex;gap:10px;align-items:flex-start;margin:10px 0}.kdsl input{margin-top:4px}.kdsl small{display:block}
-@keyframes pgin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-#app.pgin{animation:pgin .24s cubic-bezier(.2,.7,.2,1)}
+/* one click feel everywhere: hover, press, keyboard focus */
+:root{--hv:.95}:root[data-theme="dark"]{--hv:1.16}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--hv:1.16}}
+:where(button,.exr,.plan,.mt,.item[data-view],.item[data-xpopen],.item[data-pe]){transition:transform .14s ease,filter .18s ease,background-color .18s ease,box-shadow .18s ease,border-color .18s ease}
+@media(hover:hover){:where(button:not(:disabled),.exr,.plan,.mt,.item[data-view],.item[data-xpopen],.item[data-pe]):hover{filter:brightness(var(--hv))}}
+:where(button:not(:disabled),.exr,.plan,.mt,.item[data-view],.item[data-xpopen],.item[data-pe]):active{transform:scale(.97);filter:brightness(calc(var(--hv) - .04))}
+:where(button,.exr,.plan,.mt,[data-go],select,input,textarea):focus-visible{outline:2px solid var(--btn);outline-offset:2px}
+@keyframes pgin{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+#app.pgin{animation:pgin .48s cubic-bezier(.22,.8,.24,1)}
+@media(prefers-reduced-motion:reduce){#app.pgin{animation:none}:where(button,.exr,.plan,.mt):active{transform:none}}
 button,[data-nv],.dwi{-webkit-tap-highlight-color:transparent}
 button:not(:disabled):active,.dwi:active{transform:scale(.96);transition:transform .08s}
 button{transition:transform .12s ease,background-color .18s ease,color .18s ease,box-shadow .18s ease}
@@ -6931,7 +6938,7 @@ function rxSmImg(){let n=0;S.products.forEach(p=>{if(p.smp&&p.dish&&!p.img&&RXIM
     if(s.sig===sig()&&s.y>40&&scrollY<s.y-40&&!document.querySelector('#m .modal'))scrollTo(0,s.y)}
   ['click','change'].forEach(ev=>document.addEventListener(ev,e=>{take(e);[0,50,160,400].forEach(ms=>setTimeout(fix,ms))},true));
   /* page transition when the screen changes */
-  let last='';const _r=render;render=function(){const x=_r.apply(this,arguments);try{const s=sig();if(last&&s!==last&&!matchMedia('(prefers-reduced-motion:reduce)').matches){const a=document.getElementById('app');if(a){a.classList.remove('pgin');void a.offsetWidth;a.classList.add('pgin');clearTimeout(a._pg);a._pg=setTimeout(()=>a.classList.remove('pgin'),300)}}last=s}catch(e){}return x};
+  let last='';const _r=render;render=function(){const x=_r.apply(this,arguments);try{const s=sig();if(last&&s!==last&&!matchMedia('(prefers-reduced-motion:reduce)').matches){const a=document.getElementById('app');if(a){a.classList.remove('pgin');void a.offsetWidth;a.classList.add('pgin');clearTimeout(a._pg);a._pg=setTimeout(()=>a.classList.remove('pgin'),560)}}last=s}catch(e){}return x};
 })();
 /* ===== v34: alerts: sound, vibration, banner for waiters and kitchen, keep screen awake ===== */
 const ALK='atoll_dev_alert';

@@ -1,6 +1,6 @@
 /* Atoll POS service worker: keeps the app and its libraries on the device so it opens with no internet.
    Shop data is stored separately by the app (IndexedDB) and never passes through here. */
-const V = 'atoll-sw-7'
+const V = 'atoll-sw-8'
 const SHELL = ['/', '/index.html', '/config.js', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/favicon.svg']
 
 self.addEventListener('install', (e) => {
