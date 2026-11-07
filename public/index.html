@@ -975,6 +975,13 @@ button,[data-nv],.dwi{-webkit-tap-highlight-color:transparent}
 button:not(:disabled):active,.dwi:active{transform:scale(.96);transition:transform .08s}
 button{transition:transform .12s ease,background-color .18s ease,color .18s ease,box-shadow .18s ease}
 @media(prefers-reduced-motion:reduce){#app.pgin{animation:none}button{transition:none}}
+.cmtimer{display:flex;flex-direction:column;align-items:center;gap:2px;margin:14px 0 10px;padding:12px 16px;border-radius:16px;background:#fff4e0;color:#8a5200;font-size:14px}
+.cmtimer b{font-size:34px;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.cmgo2{display:block;width:100%;margin:10px 0 0;padding:14px;border:1.5px solid currentColor;border-radius:14px;background:transparent;color:inherit;font:inherit;font-weight:600}
+.cmlink{display:block;margin:12px auto 0;background:none;border:0;color:#c0392b;font:inherit;text-decoration:underline}
+.kdshold{margin:8px 0 6px;padding:6px 10px;border-radius:10px;background:#fff4e0;color:#8a5200;font-size:12.5px}
+.kdshold b{font-variant-numeric:tabular-nums}
+.kdst .kdsrow{margin-top:6px}.kdst .kdsrow .go{margin-top:0}
 </style>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -992,7 +999,7 @@ let S={products:SEED,customers:[{id:1,name:"Ahmed Naseem",bal:0},{id:2,name:"Ais
 if(!CLOUD)try{const r=localStorage.getItem("atoll2");if(r){const d=JSON.parse(r);if(d&&d.products)S=d}}catch(e){}
 const PLANS={basic:{n:'Basic',p:129,inc:2,x:29,cap:3000},pro:{n:'Pro',p:319,inc:5,x:79,cap:Infinity}};
 const ROLE={owner:'Owner',full:'Full access',cashier:'Cashier'};
-const PERMS=[['sell','Make sales'],['discount','Give discounts'],['credit','Sell on credit'],['prodview','View products'],['prodedit','Add and edit products and prices'],['invview','View invoices'],['recv','Receive payments on invoices'],['cbview','View cashbook'],['expense','Record expenses'],['reports','View reports'],['purchase','Manage purchasing (Pro)'],['register','Open and close register (Pro)'],['refund','Give refunds']];
+const PERMS=[['sell','Make sales'],['discount','Give discounts'],['credit','Sell on credit'],['prodview','View products'],['prodedit','Add and edit products and prices'],['invview','View invoices'],['recv','Receive payments on invoices'],['cbview','View cashbook'],['expense','Record expenses'],['reports','View reports'],['purchase','Manage purchasing (Pro)'],['register','Open and close register (Pro)'],['refund','Give refunds'],['kitchen','Kitchen screen (restaurants)']];
 const CASHIER=['sell','prodview','register'];
 S.plan=S.plan||'basic';S.renew=S.renew||Date.now()+30*864e5;S.status=S.status||'active';S.devs=S.devs||[];S.cats=S.cats||[];S.sups=S.sups||[];S.pord=S.pord||[];S.regs=S.regs||[];S.log=S.log||[];S.reqs=S.reqs||[];
 S.users=S.users||[];
@@ -1000,7 +1007,7 @@ let me=null;
 const can=k=>!!me&&(me.role!=='cashier'||me.perms.includes(k));
 const mgr=()=>!!me&&me.role!=='cashier';
 const bill=()=>{const p=PLANS[S.plan],ex=Math.max(0,S.users.length-p.inc);return{p,ex,tot:p.p+ex*p.x}};
-const allowed=t=>({ov:1,cust:can('sell'),pr:can('prodview'),pos:can('sell'),act:mgr(),dsn:mgr(),quot:can('sell'),inv:can('invview'),cb:can('cbview'),team:mgr(),set:mgr(),biz:can('reports')||can('purchase')||can('register')||can('prodedit')})[t];
+const allowed=t=>({ov:1,cust:can('sell'),pr:can('prodview'),pos:can('sell'),act:mgr(),dsn:mgr(),quot:can('sell'),inv:can('invview'),cb:can('cbview'),team:mgr(),set:mgr(),biz:can('reports')||can('purchase')||can('register')||can('prodedit')||(rxOn()&&can('kitchen'))})[t];
 const save=()=>{if(CLOUD){cloudSaved();return}try{localStorage.setItem("atoll2",JSON.stringify(S))}catch(e){}};
 const $=s=>document.querySelector(s),m=n=>"Rf "+(+n||0).toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -2051,7 +2058,7 @@ function prList(){
 Object.assign(I,{print:'<path d="M7 9V4h10v5M7 17H5a1 1 0 01-1-1v-5a2 2 0 012-2h12a2 2 0 012 2v5a1 1 0 01-1 1h-2M7 14h10v6H7z"/>'});
 const NAV=[
  {h:null,items:[['ov','Dashboard','ov','',()=>true]]},
- {h:'Selling',items:[['pos','Sell','pos','',()=>can('sell')],['inv','Invoices','inv','',()=>can('invview')],['quot','Quotations','quot','',()=>can('sell')],['cust','Customers','cust','',()=>can('sell')],['reg','Register','biz','reg',()=>can('register')],['kds','Kitchen','biz','kds',()=>rxOn()&&can('sell')]]},
+ {h:'Selling',items:[['pos','Sell','pos','',()=>can('sell')],['inv','Invoices','inv','',()=>can('invview')],['quot','Quotations','quot','',()=>can('sell')],['cust','Customers','cust','',()=>can('sell')],['reg','Register','biz','reg',()=>can('register')],['kds','Kitchen','biz','kds',()=>rxOn()&&can('kitchen')]]},
  {h:'Catalog',items:[['pr','Products','pr','',()=>can('prodview')],['ivt','Inventory','biz','ivt',()=>can('prodview')],['pur','Purchasing','biz','pur',()=>can('purchase')],['imp','Import products','biz','imp',()=>can('prodedit')]]},
  {h:'Money',items:[['cb','Cashbook','cb','',()=>can('cbview')],['exp','Expenses','biz','exp',()=>can('cbview')],['rep','Reports','biz','rep',()=>can('reports')],['acc','Accounts','biz','acc',()=>can('reports')],['gst','GST report','biz','gst',()=>can('reports')&&gstOn()]]},
  {h:'System',items:[['team','Team','team','users',()=>mgr()],['sub','Subscription','team','plan',()=>mgr()],['act','Activity log','act','',()=>mgr()],['prt','Printing and devices','set','print',()=>mgr()],['set','Settings','set','shop',()=>mgr()]]}];
@@ -2073,7 +2080,7 @@ function setts(){
   document.querySelectorAll('#app>.card').forEach(c=>{const t=(c.querySelector('.hd')||{}).textContent||'';c.style.display=(pr===/Printing defaults|Connected devices|barcode scanner/i.test(t))?'':'none'});
 }
 function biz(){
-  const ok={rep:can('reports'),pur:can('purchase'),reg:can('register'),imp:can('prodedit'),ivt:can('prodview'),acc:can('reports'),exp:can('cbview'),kds:rxOn()&&can('sell')};
+  const ok={rep:can('reports'),pur:can('purchase'),reg:can('register'),imp:can('prodedit'),ivt:can('prodview'),acc:can('reports'),exp:can('cbview'),kds:rxOn()&&can('kitchen')};
   if(!ok[bz])bz=Object.keys(ok).find(k=>ok[k])||'rep';
   $('#app').innerHTML="<div id='bzb'></div>";
   ({rep:bRep,pur:bPur,reg:bReg,imp:bImp,ivt:bIvt,acc:bAcc,exp:bExp,kds:bKds})[bz]();
@@ -6515,20 +6522,35 @@ async function rxFetch(){if(!rxOn()||!S.menuOn||typeof CLOUD==='undefined'||!CLO
   try{const r=await sbc.from('table_orders').select('*').eq('shop_id',cl.shop).eq('status','new').order('created_at',{ascending:true});if(r.error||!r.data)return;
     const fresh=r.data.filter(o=>!RXQ.seen[o.id]);r.data.forEach(o=>RXQ.seen[o.id]=1);const had=RXQ.inc.length;RXQ.inc=r.data;
     if(fresh.length&&RXQ.ready){rxBeep();toast('New order from '+dname(fresh[0].tbl)+(fresh.length>1?' and '+(fresh.length-1)+' more':''))}
+    try{const e=await sbc.from('table_orders').select('*').eq('shop_id',cl.shop).in('status',['accepted','cancelled']).gte('created_at',new Date(Date.now()-2*36e5).toISOString());if(!e.error&&e.data){const todo=e.data.filter(o=>(o.rev||1)>1&&(o.rev||1)>(o.applied||0));if(todo.length)await rxApplyEdits(todo)}}catch(x){}
     RXQ.ready=1;if(had!==RXQ.inc.length){if(document.querySelector('#rxcv')&&!RXQ.edit)rxFloor();if(tab==='pos'&&usv==='items')try{refreshTabs();lines()}catch(e){}}}catch(e){}}
 setInterval(rxFetch,8000);setTimeout(rxFetch,2500);
 const rxAgo=t=>{const s=Math.max(0,Math.round((Date.now()-new Date(t).getTime())/1000));return s<60?'just now':s<3600?Math.round(s/60)+' min ago':Math.round(s/3600)+' h ago'};
 function rxInbox(){const L=RXQ.inc;$('#m').innerHTML=`<div class='modal'><div><div class='hd'>Incoming orders</div>${L.map(o=>`<div class='card' style='margin:10px 0'><div style='display:flex;justify-content:space-between'><b>${esc(dname(o.tbl))}</b><small class='sub'>${rxAgo(o.created_at)}${o.cust?' · '+esc(o.cust):''}</small></div>${(o.items||[]).map(i=>`<div class='row' style='font-size:14px'><span>${i.qty} × ${esc(i.name)}</span><b>${m(i.qty*i.price)}</b></div>`).join('')}${o.note?`<p class='rxnt' style='margin:6px 0'>“${esc(o.note)}”</p>`:''}<div style='display:flex;gap:10px;margin-top:10px'><button class='ghost danger' style='flex:1' data-rxrej='${o.id}'>Decline</button><button class='go' style='flex:2' data-rxacc='${o.id}'>Accept and add to table</button></div></div>`).join('')||`<div class='empty'>No new orders.</div>`}</div></div>`}
 function rxSyncC(c){const base=c.cart.filter(l=>!l.sv).reduce((a,l)=>a+lt(l),0),i=c.cart.findIndex(l=>l.sv),pc=+S.svcp||0;
   if(c.svc&&base>0&&pc>0){const p=Math.round(base*pc)/100,nm='Service charge '+pc+'%';if(i<0)c.cart.push({id:'svc',name:nm,price:p,cost:0,cat:'',tx:'',qty:1,sv:1,sent:1});else Object.assign(c.cart[i],{price:p,name:nm,qty:1})}else if(i>=0)c.cart.splice(i,1)}
-async function rxSetStatus(id,st){try{const r=await sbc.from('table_orders').update({status:st}).eq('id',id).eq('status','new');return!r.error}catch(e){return false}}
-async function rxAccept(id){const o=RXQ.inc.find(x=>x.id===id);if(!o)return;if(!await rxSetStatus(id,'accepted')){toast('Could not update. Check your connection.',1);return}
+async function rxSetStatus(id,st,x){try{const r=await sbc.from('table_orders').update({status:st,...(x||{})}).eq('id',id).eq('status','new');return!r.error}catch(e){return false}}
+function rxQLines(c,o){(o.items||[]).forEach(i=>{const p=S.products.find(x=>x.id===i.id);if(!p)return;c.cart.push({id:p.id,vi:undefined,si:undefined,name:p.name,price:p.price,cost:p.cost||0,cat:p.cat||'',tx:p.tax||'',qty:i.qty,qr:1,qo:o.id,qv:o.rev||1,qt:Date.parse(o.created_at)||Date.now(),lid:rxRid(),...(o.note?{nt:o.note}:{})})})}
+async function rxAccept(id){const o=RXQ.inc.find(x=>x.id===id);if(!o)return;if(!await rxSetStatus(id,'accepted',{applied:o.rev||1})){toast('Could not update. Check your connection.',1);return}
   saveCur();const name=dname(o.tbl);let c=carts.find(x=>x.tb===name);
   if(!c){const cur=carts[acx];if(cur&&!cur.cart.length&&!cur.tb){c=cur}else{c={n:++cartSeq,cart:[],cu:'',disc:'',reason:''};carts.push(c)}c.tb=name;if(S.svcp>0)c.svc=true}
-  (o.items||[]).forEach(i=>{const p=S.products.find(x=>x.id===i.id);if(!p)return;const l=c.cart.find(z=>z.id===p.id&&!z.nt&&!z.sv&&z.price===p.price);
-    if(l)l.qty+=i.qty;else c.cart.push({id:p.id,vi:undefined,si:undefined,name:p.name,price:p.price,cost:p.cost||0,cat:p.cat||'',tx:p.tax||'',qty:i.qty,qr:1,...(o.note?{nt:o.note}:{})})});
+  rxQLines(c,o);if(typeof rxKds==='function'&&rxKds())rxSendC(c,true);
   rxSyncC(c);if(c===carts[acx])loadCart(acx);RXQ.inc=RXQ.inc.filter(x=>x.id!==id);rxPersist();save();
-  toast('Added to '+name+'. Tap Kitchen to print it.');$('#m').innerHTML='';if(tab==='pos'){try{render()}catch(e){}}}
+  toast(typeof rxKds==='function'&&rxKds()?'Accepted and sent to the kitchen: '+name:'Added to '+name+'. Tap Kitchen to print it.');$('#m').innerHTML='';if(tab==='pos'){try{render()}catch(e){}}}
+/* the customer changed (or cancelled) an order that staff already accepted */
+async function rxApplyEdits(list){let any=0;
+  for(const o of list){const name=dname(o.tbl);
+    const r=await sbc.from('table_orders').update({applied:o.rev}).eq('id',o.id).lt('applied',o.rev).select('id');if(r.error||!r.data||!r.data.length)continue;
+    saveCur();const c=carts.find(x=>x.tb===name);if(!c)continue;const arr=c.cart,mine=arr.filter(l=>l.qo===o.id);
+    /* items the kitchen already started stay as they are; everything else is replaced by what the customer now wants */
+    const keep={};mine.forEach(l=>{const q=Math.min(l.qty,rxLockOf(c,l.lid));if(q>0)keep[l.id]=(keep[l.id]||0)+q});
+    const lids=new Set(mine.map(l=>l.lid));
+    c.rounds=(c.rounds||[]).map(r=>{r.items=r.items.filter(i=>i.v||!lids.has(i.lid)||rxILocked(r,i));return r}).filter(r=>r.items.length);
+    for(let k=arr.length-1;k>=0;k--){const l=arr[k];if(l.qo!==o.id)continue;const lq=Math.min(l.qty,rxLockOf(c,l.lid));if(lq>0){l.qty=lq;l.sent=lq}else arr.splice(k,1)}
+    if(o.status==='accepted'){const want=(o.items||[]).map(i=>({...i,qty:i.qty-(keep[i.id]||0)})).filter(i=>i.qty>0);rxQLines(c,{...o,items:want})}
+    c.rounds.forEach(rxRSync);if(typeof rxKds==='function'&&rxKds())rxSendC(c,true);
+    rxSyncC(c);if(c===carts[acx])loadCart(acx);any=1;toast((o.status==='cancelled'?'Customer cancelled their order at ':'Customer changed their order at ')+name)}
+  if(any){rxPersist();save();try{rxBeep()}catch(e){}if(tab==='pos'&&usv==='items'){try{refreshTabs();lines()}catch(e){}}else if(document.querySelector('#rxcv')&&!RXQ.edit)rxFloor()}}
 async function rxReject(id){if(!await rxSetStatus(id,'rejected')){toast('Could not update. Check your connection.',1);return}RXQ.inc=RXQ.inc.filter(x=>x.id!==id);rxInbox()}
 /* toolbar chip for incoming orders + menu card in Settings */
 (function(){const _ci=uCartInner;uCartInner=function(){let h=_ci.apply(this,arguments);if(rxOn()&&RXQ.inc.length)h=h.replace("<button class='rxch' data-rxsplit>Split</button>",`<button class='rxch on' data-rxinbox>Orders (${RXQ.inc.length})</button><button class='rxch' data-rxsplit>Split</button>`);return h};
@@ -6539,40 +6561,54 @@ async function rxReject(id){if(!await rxSetStatus(id,'rejected')){toast('Could n
 function cmBoot(){
   const Q=new URLSearchParams(location.search),slug=Q.get('menu'),tbl=Q.get('t')||'',K='atoll_cm_'+slug+'_'+tbl;
   document.body.classList.add('cm');const root=document.createElement('div');root.id='cmenu';document.body.appendChild(root);
-  const st={d:null,cart:{},cat:'All',q:'',view:'menu',note:'',name:'',oid:'',ost:'',err:''};
+  const st={d:null,cart:{},cat:'All',q:'',view:'menu',note:'',name:'',oid:'',ost:'',err:'',stt:null,leftAt:0,edit:false};
   try{const j=JSON.parse(sessionStorage.getItem(K)||'null');if(j){st.cart=j.cart||{};st.oid=j.oid||'';st.name=j.name||''}}catch(e){}
   const keep=()=>{try{sessionStorage.setItem(K,JSON.stringify({cart:st.cart,oid:st.oid,name:st.name}))}catch(e){}};
   const rf=n=>'Rf '+(+n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
   let cli=null;try{cli=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}})}catch(e){}
   const lines=()=>Object.entries(st.cart).map(([id,q])=>{const it=st.d.items.find(x=>String(x.id)===id);return it&&q>0?{it,q}:null}).filter(Boolean);
   const total=()=>lines().reduce((a,l)=>a+l.it.price*l.q,0),count=()=>lines().reduce((a,l)=>a+l.q,0);
-  const stp=(it)=>{const q=st.cart[it.id]||0;return it.out?`<span class='cmso'>Sold out</span>`:q?`<div class='cmst'><button data-cm='dec' data-id='${it.id}' aria-label='Fewer'>−</button><b>${q}</b><button data-cm='inc' data-id='${it.id}' aria-label='More'>+</button></div>`:`<button class='cmadd' data-cm='inc' data-id='${it.id}'>Add</button>`};
+  const lkq=id=>((st.stt&&st.stt.lk)||[]).filter(x=>String(x.id)===String(id)).reduce((a,x)=>a+x.q,0);
+  const stp=(it)=>{const q=st.cart[it.id]||0;return it.out?`<span class='cmso'>Sold out</span>`:q?`<div class='cmst'><button data-cm='dec' data-id='${it.id}' aria-label='Fewer' ${st.edit&&q<=lkq(it.id)?'disabled':''}>−</button><b>${q}</b><button data-cm='inc' data-id='${it.id}' aria-label='More'>+</button></div>`:`<button class='cmadd' data-cm='inc' data-id='${it.id}'>Add</button>`};
   function draw(){
     if(!st.d){root.innerHTML=`<div class='cmc'><p class='cmmsg'>${st.err||'Loading the menu…'}</p></div>`;return}
     const d=st.d,cats=['All',...new Set(d.items.map(i=>i.cat).filter(Boolean))];
-    if(st.view==='sent'){const m_={new:['Order sent','Waiting for a staff member to confirm it. You can keep this page open.'],accepted:['Order confirmed','Your order is being prepared. Thank you!'],rejected:['We could not take this order','Please ask a member of staff and they will help you.']}[st.ost||'new']||['Order sent',''];
-      root.innerHTML=`<div class='cmc cmdone'><div class='cmtick ${st.ost==='rejected'?'bad':''}'>${st.ost==='rejected'?'!':'✓'}</div><h2>${m_[0]}</h2><p>${m_[1]}</p><p class='cmsub'>${esc(d.shop)} · ${esc(dname(tbl))}</p><button class='cmgo' data-cm='more'>Order something else</button></div>`;return}
+    if(st.view==='sent'){const T=st.stt||{},ks=T.ks||'',left=Math.max(0,Math.round((st.leftAt-Date.now())/1000)),live=(st.ost==='new'||st.ost==='accepted'),part=(T.lk||[]).length>0&&!T.locked,can=live&&!T.locked&&T.win>0&&left>0;
+      const m_=st.ost==='rejected'?['We could not take this order','Please ask a member of staff and they will help you.']:st.ost==='cancelled'?['Order cancelled','Nothing was ordered. You can start a new order below.']:st.ost==='accepted'?(ks==='prep'?['Being prepared','The kitchen is preparing your order.']:ks==='ready'?['Ready!','Your order is ready and on its way to your table.']:ks==='served'?['Enjoy your meal','Thank you for ordering with us.']:['Order confirmed','The kitchen will start on it soon.']):['Order sent','Waiting for a staff member to confirm it. You can keep this page open.'];
+      const bad=st.ost==='rejected'||st.ost==='cancelled',tm=`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;
+      const tail=can?`<div class='cmtimer'><span>You can still change your order for</span><b id='cmtm'>${tm}</b></div><button class='cmgo' data-cm='edit'>Change my order</button><p class='cmsub'>${part?'Items the kitchen has already started cannot be changed.':'The kitchen starts after this time.'}</p>`:(live&&T.locked?`<p class='cmsub'>The kitchen has started, so this order can no longer be changed. Please ask a member of staff.</p>`:(live&&T.win>0&&T.status&&left<=0?`<p class='cmsub'>The change time has ended. Please ask a member of staff for any changes.</p>`:''));
+      root.innerHTML=`<div class='cmc cmdone'><div class='cmtick ${bad?'bad':''}'>${bad?'!':'✓'}</div><h2>${m_[0]}</h2><p>${m_[1]}</p>${tail}<p class='cmsub'>${esc(d.shop)} · ${esc(dname(tbl))}</p><button class='${can?'cmgo2':'cmgo'}' data-cm='more'>Order something else</button></div>`;return}
     if(st.view==='cart'){const L=lines(),t=total();
-      root.innerHTML=`<div class='cmc'><button class='cmback' data-cm='back'>‹ Menu</button><h2>Your order</h2><p class='cmsub'>${esc(dname(tbl))}</p>${L.map(l=>`<div class='cmrow'><div><b>${esc(l.it.name)}</b><small>${rf(l.it.price)}</small></div>${stp(l.it)}<b class='cmlt'>${rf(l.it.price*l.q)}</b></div>`).join('')||`<p class='cmmsg'>Your order is empty.</p>`}
+      root.innerHTML=`<div class='cmc'><button class='cmback' data-cm='back'>‹ Menu</button><h2>${st.edit?'Change your order':'Your order'}</h2><p class='cmsub'>${esc(dname(tbl))}</p>${L.map(l=>`<div class='cmrow'><div><b>${esc(l.it.name)}</b><small>${rf(l.it.price)}</small></div>${stp(l.it)}<b class='cmlt'>${rf(l.it.price*l.q)}</b></div>`).join('')||`<p class='cmmsg'>Your order is empty.</p>`}
       <label class='cmfl'>Your name (optional)<input id='cmname' value='${esc(st.name)}' maxlength='40' placeholder='So the staff know who ordered'></label><label class='cmfl'>Notes or allergies<textarea id='cmnote' maxlength='200' placeholder='e.g. no onion, extra spicy'>${esc(st.note)}</textarea></label>
-      <div class='cmtot'><span>Total</span><b>${rf(t)}</b></div><p class='cmsub'>${d.svc>0?'A '+d.svc+'% service charge is added to the final bill. ':''}Prices include GST. You pay at the table.</p>${st.err?`<p class='cmerr'>${esc(st.err)}</p>`:''}<button class='cmgo' data-cm='send' ${L.length?'':'disabled'}>Send order to the table</button></div>`;return}
+      <div class='cmtot'><span>Total</span><b>${rf(t)}</b></div><p class='cmsub'>${d.svc>0?'A '+d.svc+'% service charge is added to the final bill. ':''}Prices include GST. You pay at the table.</p>${st.err?`<p class='cmerr'>${esc(st.err)}</p>`:''}<button class='cmgo' data-cm='${st.edit?'update':'send'}' ${L.length?'':'disabled'}>${st.edit?'Update my order':'Send order to the table'}</button>${st.edit?`<button class='cmgo2' data-cm='keep'>Keep my original order</button>${(st.stt&&st.stt.lk||[]).length?'':`<button class='cmlink' data-cm='cancelord'>Cancel the whole order</button>`}`:''}</div>`;return}
     const q=st.q.toLowerCase(),L=d.items.filter(i=>(st.cat==='All'||i.cat===st.cat)&&(!q||i.name.toLowerCase().includes(q)));
     root.innerHTML=`<div class='cmc'><div class='cmhd'><h1>${esc(d.shop)}</h1><span class='cmpill'>${esc(dname(tbl))}</span></div><input id='cmq' class='cmq' placeholder='Search the menu' value='${esc(st.q)}'><div class='cmcats'>${cats.map(c=>`<button class='${st.cat===c?'on':''}' data-cm='cat' data-c='${esc(c)}'>${esc(c)}</button>`).join('')}</div>
     ${L.map(i=>`<div class='cmit ${i.out?'so':''}'>${i.img?`<img src='${i.img}' alt='' loading='lazy'>`:''}<div class='cmin'><b>${esc(i.name)}</b>${i.desc?`<p>${esc(i.desc)}</p>`:''}<span>${rf(i.price)}</span></div>${stp(i)}</div>`).join('')||`<p class='cmmsg'>Nothing found.</p>`}
     ${count()?`<button class='cmbar' data-cm='cart'><span>${count()} item${count()>1?'s':''}</span><b>View order · ${rf(total())}</b></button>`:''}</div>`}
-  const poll=async()=>{if(st.view!=='sent'||!st.oid||!cli)return;try{const r=await cli.rpc('menu_status',{p_id:st.oid});if(!r.error&&r.data&&r.data!==st.ost){st.ost=r.data;draw()}}catch(e){}};
-  setInterval(poll,5000);
+  const poll=async()=>{if(st.view!=='sent'||!st.oid||!cli)return;try{const r=await cli.rpc('menu_state',{p_id:st.oid}),s_=r&&r.data;
+      if(s_&&typeof s_==='object'){st.stt=s_;st.ost=s_.status;st.leftAt=Date.now()+(s_.left||0)*1000;draw()}
+      else{const r2=await cli.rpc('menu_status',{p_id:st.oid});if(!r2.error&&r2.data&&r2.data!==st.ost){st.ost=r2.data;draw()}}}catch(e){}};
+  setInterval(()=>{if(st.view!=='sent'||!st.stt)return;const left=Math.max(0,Math.round((st.leftAt-Date.now())/1000)),el=document.getElementById('cmtm');if(el){el.textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');if(left<=0)draw()}},1000);
+  const back2sent=()=>{st.edit=false;st.cart={};st.note='';st.view='sent';keep();draw();poll()};
+  setInterval(poll,4000);
   root.addEventListener('click',async e=>{const b=e.target.closest('[data-cm]');if(!b)return;const a=b.dataset.cm,id=b.dataset.id;
     if(a==='inc'){st.cart[id]=Math.min(20,(st.cart[id]||0)+1);keep();draw()}
-    else if(a==='dec'){st.cart[id]=Math.max(0,(st.cart[id]||0)-1);if(!st.cart[id])delete st.cart[id];keep();if(st.view==='cart'&&!count())st.view='menu';draw()}
+    else if(a==='dec'){if(st.edit&&(st.cart[id]||0)<=lkq(id))return;st.cart[id]=Math.max(0,(st.cart[id]||0)-1);if(!st.cart[id])delete st.cart[id];keep();if(st.view==='cart'&&!count())st.view='menu';draw()}
     else if(a==='cat'){st.cat=b.dataset.c;draw()}
     else if(a==='cart'){st.err='';st.view='cart';draw();window.scrollTo(0,0)}
     else if(a==='back'){const n=$('#cmnote'),nm=$('#cmname');if(n)st.note=n.value;if(nm){st.name=nm.value;keep()}st.view='menu';draw()}
+    else if(a==='edit'){const T=st.stt||{};st.cart={};(T.items||[]).forEach(i=>{st.cart[String(i.id)]=i.qty});st.note=T.note||'';st.name=T.name||st.name;st.edit=true;st.err='';st.view='cart';draw();window.scrollTo(0,0)}
+    else if(a==='keep'){back2sent()}
+    else if(a==='update'||a==='cancelord'){if(a==='cancelord'&&!confirm('Cancel this whole order?'))return;const n=$('#cmnote'),nm=$('#cmname');if(n)st.note=n.value;if(nm)st.name=nm.value;b.disabled=true;
+      try{const r=await cli.rpc('menu_update',{p_id:st.oid,p_items:a==='cancelord'?[]:lines().map(l=>({id:l.it.id,qty:l.q})),p_note:st.note,p_name:st.name}),x=r.data;
+        if(r.error||!x||!x.ok){const e_=x&&x.err;if(e_==='locked'||e_==='expired'||e_==='closed'){st.edit=false;st.cart={};st.view='sent';keep();draw();poll();return}st.err={items:'Those items are no longer available. Please check your order.'}[e_]||'Could not update the order. Check your connection and try again.';b.disabled=false;draw();return}
+        back2sent()}catch(er){st.err='Could not update the order. Check your connection and try again.';b.disabled=false;draw()}}
     else if(a==='more'){st.view='menu';st.cart={};st.note='';st.oid='';keep();draw();window.scrollTo(0,0)}
     else if(a==='send'){const n=$('#cmnote'),nm=$('#cmname');if(n)st.note=n.value;if(nm)st.name=nm.value;b.disabled=true;b.textContent='Sending…';
       try{const r=await cli.rpc('menu_order',{p_slug:slug,p_table:tbl,p_items:lines().map(l=>({id:l.it.id,qty:l.q})),p_note:st.note,p_name:st.name});
         const x=r.data;if(r.error||!x||!x.ok){st.err={busy:'This table has several orders waiting. Please ask a member of staff.',closed:'Ordering is switched off right now.',table:'This table code is not valid. Please ask a member of staff.',items:'Those items are no longer available. Please check your order.'}[x&&x.err]||'Could not send the order. Check your connection and try again.';draw();return}
-        st.oid=x.id;st.ost='new';st.view='sent';st.cart={};st.note='';keep();draw()}catch(er){st.err='Could not send the order. Check your connection and try again.';draw()}}});
+        st.oid=x.id;st.ost='new';st.stt=null;st.view='sent';st.cart={};st.note='';keep();draw();poll()}catch(er){st.err='Could not send the order. Check your connection and try again.';draw()}}});
   root.addEventListener('input',e=>{if(e.target.id==='cmq'){st.q=e.target.value;const p=e.target.selectionStart;draw();const n=$('#cmq');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(x){}}}});
   (async()=>{draw();if(!cli){st.err='This menu is not available right now.';draw();return}
     try{const r=await cli.rpc('menu_public',{p_slug:slug});if(r.error||!r.data||!r.data.ok){st.err='This menu is not available right now. Please ask a member of staff.';draw();return}
@@ -6617,7 +6653,7 @@ async function rxPull(){if(!rxShared()||RXS.pulling||RXS.busy)return;if(rxPlan()
   }catch(e){}finally{RXS.pulling=0}}
 (function(){const _p=rxPersist;rxPersist=function(){_p.apply(this,arguments);rxPushSoon()}})();
 function rxStartSync(){if(RXS.sub||!rxShared())return;RXS.sub=1;
-  try{sbc.channel('rx_'+cl.shop).on('postgres_changes',{event:'*',schema:'public',table:'open_orders',filter:'shop_id=eq.'+cl.shop},()=>rxPullSoon()).on('postgres_changes',{event:'INSERT',schema:'public',table:'table_orders',filter:'shop_id=eq.'+cl.shop},()=>{if(typeof rxFetch==='function')rxFetch()}).subscribe()}catch(e){}}
+  try{sbc.channel('rx_'+cl.shop).on('postgres_changes',{event:'*',schema:'public',table:'open_orders',filter:'shop_id=eq.'+cl.shop},()=>rxPullSoon()).on('postgres_changes',{event:'*',schema:'public',table:'table_orders',filter:'shop_id=eq.'+cl.shop},()=>{if(typeof rxFetch==='function')rxFetch()}).subscribe()}catch(e){}}
 setInterval(()=>{if(rxShared()){rxStartSync();rxPull()}},4000);
 /* ===== v28: restaurant menu items (dishes, ingredients) and restaurant dashboard ===== */
 const XTAGS=['Vegetarian','Vegan','Spicy','Halal','Contains nuts','Contains seafood','Gluten free'];
@@ -6765,68 +6801,108 @@ const RXIMG={"Mas huni with roshi": "data:image/webp;base64,UklGRlgMAABXRUJQVlA4
 const rxKds=()=>rxOn()&&S.rxKds!==false;
 const KDS={sig:'',seen:null,stn:'all',t:null};
 const rxRoundsOf=c=>c.rounds||(c.rounds=[]);
-function rxLockOf(c,lid){let q=0;if(!lid)return 0;(c.rounds||[]).forEach(r=>{if(r.st==='new'&&rxKds())return;(r.items||[]).forEach(it=>{if(it.lid===lid&&!it.v)q+=it.q})});return q}
-function rxStatOf(c,lid){let s='';(c.rounds||[]).forEach(r=>{(r.items||[]).forEach(it=>{if(it.lid===lid&&!it.v)s=r.st})});return s}
+const rxWw=()=>Math.max(0,+S.rxWw||0),rxCw=()=>Math.max(0,S.rxCw==null?2:+S.rxCw||0);
+/* every item on a kitchen ticket has its own state: new -> prep -> ready -> done. An item is locked once the kitchen has started it. */
+const rxIs=(r,it)=>it.s||r.st;
+const rxILocked=(r,it)=>rxIs(r,it)!=='new';
+const rxOrd={new:0,prep:1,ready:2,done:3};
+function rxRSync(r){const A=(r.items||[]).filter(i=>!i.v).map(i=>rxIs(r,i));if(!A.length)return;r.st=A.includes('new')?'new':A.includes('prep')?'prep':A.includes('ready')?'ready':'done'}
+/* the kitchen cannot start an item before this time: the waiters' hold time, or the customer's change time for QR items */
+function rxIHold(r,it){if(!rxKds()||it.v||rxIs(r,it)!=='new')return 0;const e=it.l&&it.l.qo?((it.l.qt||r.at)+rxCw()*60000):((it.at||r.at)+rxWw()*60000);return e>Date.now()?e:0}
+function rxHold(r,stn){let t=0;(r.items||[]).forEach(it=>{if(stn!==undefined&&(it.stn||'Kitchen')!==stn)return;const e=rxIHold(r,it);if(e>t)t=e});return t}
+const rxMmss=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function rxLockOf(c,lid){let q=0;if(!lid)return 0;(c.rounds||[]).forEach(r=>{(r.items||[]).forEach(it=>{if(it.lid===lid&&!it.v&&rxILocked(r,it))q+=it.q})});return q}
+function rxStatOf(c,lid){let s='';(c.rounds||[]).forEach(r=>{(r.items||[]).forEach(it=>{if(it.lid===lid&&!it.v){const x=rxIs(r,it);if(!s||rxOrd[x]<rxOrd[s])s=x}})});return s}
+const rxAnyNew=c=>(c.rounds||[]).some(r=>(r.items||[]).some(i=>!i.v&&rxIs(r,i)==='new'));
+/* while the kitchen has not started an item, a waiter's changes also change the ticket */
+function rxReconcile(c,arr){if(!rxKds()||!c||!c.rounds||!c.rounds.length)return;arr=arr||c.cart;let ch=0;
+  c.rounds.forEach(r=>{r.items=r.items.filter(it=>{if(rxILocked(r,it)||it.v)return true;const l=arr.find(x=>x.lid===it.lid);if(!l){ch=1;return false}return true})});
+  const per={};arr.forEach(l=>{if(l.sv||!l.lid)return;per[l.lid]=l});
+  Object.keys(per).forEach(lid=>{const l=per[lid];let tot=0;c.rounds.forEach(r=>r.items.forEach(it=>{if(it.lid===lid&&!it.v)tot+=it.q}));
+    if(tot>l.qty+1e-9){let ex=Math.round((tot-l.qty)*1000)/1000;for(let k=c.rounds.length-1;k>=0&&ex>1e-9;k--){const r=c.rounds[k];r.items.forEach(it=>{if(it.lid!==lid||it.v||rxILocked(r,it)||ex<=1e-9)return;const d=Math.min(it.q,ex);it.q=Math.round((it.q-d)*1000)/1000;ex=Math.round((ex-d)*1000)/1000;ch=1});r.items=r.items.filter(it=>it.q>1e-9)}}
+    if((l.sent||0)>l.qty)l.sent=l.qty;if(tot>0){let t2=0;c.rounds.forEach(r=>r.items.forEach(it=>{if(it.lid===lid&&!it.v)t2+=it.q}));l.sent=Math.round(t2*1000)/1000}});
+  const before=c.rounds.length;c.rounds=c.rounds.filter(r=>r.items.length);c.rounds.forEach(rxRSync);if(c.rounds.length!==before||ch)c.rounds.forEach(r=>{if(r.st==='new')r.mod=Date.now()})}
 function rxEnforce(c,arr){if(!rxKds()||!c||!c.rounds||!c.rounds.length)return;arr=arr||c.cart;const need={},snap={};
-  c.rounds.forEach(r=>{if(r.st==='new')return;(r.items||[]).forEach(it=>{if(it.v)return;need[it.lid]=(need[it.lid]||0)+it.q;snap[it.lid]=it.l})});
+  c.rounds.forEach(r=>{(r.items||[]).forEach(it=>{if(it.v||!rxILocked(r,it))return;need[it.lid]=(need[it.lid]||0)+it.q;snap[it.lid]=it.l})});
   Object.keys(need).forEach(lid=>{const l=arr.find(x=>x.lid===lid);if(!l){if(snap[lid])arr.push({...snap[lid],lid,qty:need[lid],sent:need[lid]})}else if(l.qty<need[lid]){l.qty=need[lid];l.sent=Math.max(l.sent||0,need[lid])}})}
 const rxLockSnap=c=>rxEnforce(c,c.cart);
 function rxGate(c){c=c||carts[acx]||{};if(!rxKds()||!c.tb)return'pay';const L=cart.filter(l=>!l.sv);if(!L.length)return'pay';
-  if(L.some(l=>l.qty>(l.sent||0)+1e-9))return'send';if((c.rounds||[]).some(r=>r.st==='new'))return'wait';return'pay'}
-(function(){const _l=lines;lines=function(){try{const c=carts[acx];if(c)rxEnforce(c,cart)}catch(e){}return _l.apply(this,arguments)};
+  if(L.some(l=>l.qty>(l.sent||0)+1e-9))return'send';if(rxAnyNew(c))return'wait';return'pay'}
+(function(){const _l=lines;lines=function(){try{const c=carts[acx];if(c){rxReconcile(c,cart);rxEnforce(c,cart)}}catch(e){}return _l.apply(this,arguments)};
   const _ci=uCartInner;uCartInner=function(){let h=_ci.apply(this,arguments);if(!rxKds())return h;const c=carts[acx]||{};if(!c.tb)return h;let k=0;
     h=h.replace(/<div class='cn'><b>[^<]*<\/b>/g,a=>{const l=cart[k++];const s=l&&l.lid?rxStatOf(c,l.lid):'';return a+(s?`<small class='kdsb ${s}'>${s==='new'?'Sent · waiting for kitchen':s==='prep'?'Kitchen is preparing':s==='ready'?'Ready to serve':'Served'}</small>`:'')});
     h=h.replace(/<button data-dec='(\d+)' aria-label='Fewer'>/g,(a,i)=>{const l=cart[i];return l&&rxLockOf(c,l.lid)>=l.qty-1e-9?`<button data-dec='${i}' aria-label='Fewer' disabled>`:a});
     h=h.replace(/<button class='ib' data-v3rm='(\d+)' aria-label='Remove'>[\s\S]*?<\/button>/g,(a,i)=>{const l=cart[i];if(!l||!l.lid||rxLockOf(c,l.lid)<=0)return a;return mgr()?`<button class='ib' data-rxvoid='${i}' aria-label='Void item' title='Void (manager)'>Void</button>`:`<button class='ib' disabled aria-label='Locked' title='Taken by the kitchen'>🔒</button>`});
     const g=rxGate(c);if(!cart.some(l=>!l.sv))return h;
-    const rep=g==='send'?`<button class='go' data-rxsend>Send to kitchen</button>`:g==='wait'?`<button class='go' disabled>Waiting for the kitchen…</button><div class='kdsrow'><button class='ghost' data-rxrecall>Recall order</button><button class='ghost' data-rxkds>Open kitchen screen</button></div><small class='sub'>You can still change this order until the kitchen takes it.</small>`:`<div class='kdsok'>✓ Taken by the kitchen · items are locked</div><button class='go' data-v3go>Continue to payment</button>`;
+    const rep=g==='send'?`<button class='go' data-rxsend>Send to kitchen</button>`:g==='wait'?`<button class='go' disabled>Waiting for the kitchen…</button><div class='kdsrow'>${rxAnyNew(c)?"<button class='ghost' data-rxrecall>Recall order</button>":''}${can('kitchen')?"<button class='ghost' data-rxkds>Open kitchen screen</button>":''}</div><small class='sub'>${(()=>{const hd=Math.max(0,...(c.rounds||[]).map(r=>rxHold(r)));return (hd?'The kitchen can start from '+new Date(hd).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'. ':'')+'You can change this order until the kitchen takes it.'})()}</small>`:`<div class='kdsok'>✓ The kitchen has started this order · items are locked</div><button class='go' data-v3go>Continue to payment</button>`;
     return h.replace(/<button class='go' data-v3go[^>]*>Continue to payment<\/button>/,rep)}})();
 function rxStn(l){const p=S.products.find(x=>x.id==l.id);return p&&p.stn||''}
-function rxKitchen(){saveCur();const c=carts[acx]||{};const L=cart.filter(l=>!l.sv&&l.qty>(l.sent||0)+1e-9);if(!L.length){toast('Nothing new to send to the kitchen.');return}
-  if(!c.tb){toast('Choose a table first.');return}
-  const r={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),at:Date.now(),by:me.name,tb:c.tb,st:rxKds()?'new':'prep',items:[]};
-  L.forEach(l=>{if(!l.lid)l.lid=rxRid();const q=Math.round((l.qty-(l.sent||0))*1000)/1000;r.items.push({lid:l.lid,name:l.name,q,nt:l.nt||'',stn:rxStn(l),l:{...l,sent:0}});l.sent=l.qty});
-  rxRoundsOf(carts[acx]).push(r);rxPersist();lines();toast(rxKds()?'Sent to the kitchen':'Sent');
-  if(S.rxPrint)rxPrintRound(r)}
+/* put every unsent line of a table into the kitchen: joins the waiting ticket if the kitchen has not started it */
+function rxSendC(c,quiet){const arr=c===carts[acx]?cart:c.cart;const L=arr.filter(l=>!l.sv&&l.qty>(l.sent||0)+1e-9);if(!L.length)return null;
+  const stt=rxKds()?'new':'prep';
+  const items=L.map(l=>{if(!l.lid)l.lid=rxRid();const q=Math.round((l.qty-(l.sent||0))*1000)/1000;l.sent=l.qty;return{lid:l.lid,name:l.name,q,nt:l.nt||'',stn:rxStn(l),at:Date.now(),s:stt,l:{...l,sent:0}}});
+  rxRoundsOf(c);let r=rxKds()?c.rounds.find(x=>x.st==='new'):null;
+  if(r){items.forEach(it=>{const e=r.items.find(x=>x.lid===it.lid&&!x.v&&rxIs(r,x)==='new');if(e){e.q=Math.round((e.q+it.q)*1000)/1000;e.l=it.l;e.at=it.at}else r.items.push(it)});r.mod=Date.now()}
+  else{r={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),at:Date.now(),by:me.name,tb:c.tb,st:stt,items};c.rounds.push(r)}
+  if(S.rxPrint&&!quiet)rxPrintRound({...r,items});return r}
+function rxKitchen(){saveCur();const c=carts[acx]||{};if(!c.tb){toast('Choose a table first.');return}
+  if(!cart.some(l=>!l.sv&&l.qty>(l.sent||0)+1e-9)){toast('Nothing new to send to the kitchen.');return}
+  const r=rxSendC(carts[acx]);rxPersist();lines();toast(rxKds()?'Sent to the kitchen':'Sent')}
 function rxPrintRound(r){const t=new Date(r.at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   const html=`<div style='font:700 18px sans-serif;text-align:center'>KITCHEN</div><div style='font:600 16px sans-serif;text-align:center;margin:4px 0'>${esc(r.tb)}</div><div style='font:12px sans-serif;text-align:center;border-bottom:1px dashed #000;padding-bottom:6px'>${t} · ${esc(r.by)}</div>`+r.items.filter(i=>!i.v).map(i=>`<div style='font:700 16px sans-serif;margin-top:8px'>${i.q} × ${esc(i.name)}</div>${i.nt?`<div style='font:14px sans-serif;margin-left:18px'>→ ${esc(i.nt)}</div>`:''}`).join('');
   let st=document.getElementById('pgst');if(!st){st=document.createElement('style');st.id='pgst';document.head.appendChild(st)}
   st.textContent='@page{size:80mm auto;margin:3mm}';let pa=document.getElementById('pa');if(!pa){pa=document.createElement('div');pa.id='pa';document.body.appendChild(pa)}
   pa.className='f80';pa.innerHTML=html;setTimeout(()=>{try{window.print()}catch(e){toast('Printing is not available here.',1)}},80)}
-function rxRecall(){const c=carts[acx];if(!c)return;const nr=(c.rounds||[]).filter(r=>r.st==='new');if(!nr.length)return;
-  nr.forEach(r=>r.items.forEach(it=>{const l=cart.find(x=>x.lid===it.lid);if(l)l.sent=Math.max(0,(l.sent||0)-it.q)}));
-  c.rounds=c.rounds.filter(r=>r.st!=='new');rxPersist();lines();toast('Order recalled. You can change it now.')}
+function rxRecall(){const c=carts[acx];if(!c||!rxAnyNew(c))return;
+  c.rounds.forEach(r=>{r.items.forEach(it=>{if(it.v||rxILocked(r,it))return;const l=cart.find(x=>x.lid===it.lid);if(l)l.sent=Math.max(0,(l.sent||0)-it.q)});r.items=r.items.filter(it=>it.v||rxILocked(r,it))});
+  c.rounds=c.rounds.filter(r=>r.items.length);c.rounds.forEach(rxRSync);rxPersist();lines();toast('Order recalled. You can change it now.')}
 function rxVoidAsk(i){const l=cart[i];if(!l||!mgr())return;RX.vi=i;
   $('#m').innerHTML=`<div class='modal'><div><div class='hd'>Void ${esc(l.name)}</div><p class='sub' style='margin:0 0 8px'>This item is already with the kitchen. Voiding removes it from the bill and tells the kitchen. It is saved in the activity log.</p><span class='fl'>Reason</span><input id='rxvr' placeholder='e.g. Guest changed mind, wrong dish'><button class='go danger' style='margin-top:12px' data-rxvoidok>Void item</button></div></div>`}
 function rxVoid(){const i=RX.vi,l=cart[i],c=carts[acx];if(!l||!c||!mgr())return;const why=($('#rxvr').value||'').trim();if(!why){toast('Please add a reason.',1);return}
   (c.rounds||[]).forEach(r=>r.items.forEach(it=>{if(it.lid===l.lid){it.v=1;it.vr=why}}));
   logit(me.name,'Voided '+l.name+' ×'+l.qty+' at '+c.tb+' — '+why);cart.splice(i,1);save();$('#m').innerHTML='';rxPersist();lines();toast('Item voided')}
-document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-v3go],[data-rxrecall],[data-rxkds],[data-rxvoid],[data-rxvoidok],[data-kdst],[data-kdsstn],[data-v3rm],[data-dec]');if(!t)return;const d=t.dataset;
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-v3go],[data-rxrecall],[data-rxkds],[data-rxvoid],[data-rxvoidok],[data-kdst],[data-kdsnow],[data-kdsstn],[data-v3rm],[data-dec]');if(!t)return;const d=t.dataset;
   if('v3go' in d){const c=carts[acx]||{};if(rxKds()&&c.tb&&rxGate(c)!=='pay'){e.stopImmediatePropagation();e.preventDefault();toast(rxGate(c)==='send'?'Send the order to the kitchen first.':'Waiting for the kitchen to take the order.',1)}return}
   if('rxrecall' in d){e.stopImmediatePropagation();rxRecall();return}
   if('rxkds' in d){e.stopImmediatePropagation();$('#m').innerHTML='';bz='kds';go('biz');return}
   if(d.rxvoid!==undefined){e.stopImmediatePropagation();rxVoidAsk(+d.rxvoid);return}
   if('rxvoidok' in d){e.stopImmediatePropagation();rxVoid();return}
   if(d.kdsstn!==undefined){KDS.stn=d.kdsstn;KDS.sig='';bKds();return}
-  if(d.kdst){const[tb,id,st]=d.kdst.split('|');rxRoundSet(tb,id,st);return}
+  if(d.kdst){const[tb,id,st,stn]=d.kdst.split('|');rxRoundSet(tb,id,st,false,stn);return}
+  if(d.kdsnow){const[tb,id,st,stn]=d.kdsnow.split('|'),c=carts.find(x=>x.tb===tb),r=c&&(c.rounds||[]).find(x=>x.id===id);const h=r?rxHold(r,stn):0;if(!r)return;if(confirm('The guest can still change this order'+(h?' for '+rxMmss(h-Date.now()):'')+'. Start it now? These items will lock.'))rxRoundSet(tb,id,st,true,stn);return}
   if(d.v3rm!==undefined||d.dec!==undefined){const c=carts[acx]||{},i=+(d.v3rm!==undefined?d.v3rm:d.dec),l=cart[i];if(l&&rxKds()&&c.tb&&rxLockOf(c,l.lid)>=(d.dec!==undefined?l.qty-1e-9:1e-9)&&rxLockOf(c,l.lid)>0){e.stopImmediatePropagation();e.preventDefault();toast(mgr()?'Taken by the kitchen. Use Void.':'Taken by the kitchen. Ask a manager to void it.',1)}}
 },true);
 document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset)return;if(t.dataset.v3q!==undefined){const c=carts[acx]||{},l=cart[+t.dataset.v3q];if(l&&rxKds()&&c.tb){const k=rxLockOf(c,l.lid);if(k>0&&(+t.value||0)<k){e.stopImmediatePropagation();t.value=l.qty;toast('Taken by the kitchen. Ask a manager to void.',1)}}}
   if('rxkdsset' in t.dataset){S.rxKds=t.checked;save();toast(t.checked?'Orders now go to the kitchen first':'Orders skip the kitchen step')}
-  if('rxprintset' in t.dataset){S.rxPrint=t.checked;save()}},true);
+  if('rxprintset' in t.dataset){S.rxPrint=t.checked;save()}
+  if(t.id==='rxww'){S.rxWw=Math.max(0,Math.min(120,Math.floor(+t.value)||0));t.value=S.rxWw;save();toast('Saved')}
+  if(t.id==='rxcw'){S.rxCw=Math.max(0,Math.min(120,Math.floor(+t.value)||0));t.value=S.rxCw;save();toast('Saved')}},true);
 /* kitchen screen */
-function rxRoundSet(tb,id,st){const c=carts.find(x=>x.tb===tb);if(!c)return;const r=(c.rounds||[]).find(x=>x.id===id);if(!r)return;r.st=st;if(st==='prep')r.tk=Date.now();if(st==='ready')r.rd=Date.now();rxPersist();KDS.sig='';bKds()}
+/* the kitchen starts / finishes one station's items of a ticket. force = start now, before the change time is over */
+function rxRoundSet(tb,id,st,force,stn){if(!can('kitchen')){toast('Only kitchen staff can do this.',1);return}const c=carts.find(x=>x.tb===tb);if(!c)return;const r=(c.rounds||[]).find(x=>x.id===id);if(!r)return;
+  const from={prep:'new',ready:'prep',done:'ready'}[st];if(!from)return;
+  const G=r.items.filter(i=>!i.v&&rxIs(r,i)===from&&(stn===undefined||(i.stn||'Kitchen')===stn));if(!G.length)return;
+  if(st==='prep'&&!force){const h=rxHold(r,stn);if(h){toast('The kitchen can start this in '+rxMmss(h-Date.now())+'.',1);return}}
+  G.forEach(i=>{i.s=st;if(st==='prep')i.tk=Date.now();if(st==='ready')i.rd=Date.now()});rxRSync(r);rxQsync(c);rxPersist();KDS.sig='';bKds()}
+/* tell the customer's QR page what the kitchen is doing, and which items it can no longer change */
+function rxQsync(c){try{if(!rxShared())return;const by={};(c.rounds||[]).forEach(r=>r.items.forEach(it=>{const o=it.l&&it.l.qo;if(!o||it.v)return;const b=by[o]=by[o]||{n:0,lk:{},mx:0,mn:9};b.n++;const x=rxOrd[rxIs(r,it)];b.mx=Math.max(b.mx,x);b.mn=Math.min(b.mn,x);if(x>0)b.lk[it.l.id]=(b.lk[it.l.id]||0)+it.q}));
+  Object.keys(by).forEach(o=>{const b=by[o],lk=Object.keys(b.lk).map(k=>({id:isNaN(+k)?k:+k,q:b.lk[k]}));const ks=b.mn>=3?'served':b.mn>=2?'ready':b.mx>=1?'prep':'';
+    sbc.from('table_orders').update({ks,locked:b.mn>=1,lk}).eq('id',o).then(()=>{},()=>{})})}catch(e){}}
+const rxStnName=i=>i.stn||'Kitchen';
 function kdsList(){const o=[];carts.forEach(c=>{if(!c.tb||!c.cart.length)return;(c.rounds||[]).forEach(r=>{if(r.st!=='done')o.push({c,r})})});return o.sort((a,b)=>a.r.at-b.r.at)}
-function kdsSig(){return JSON.stringify([kdsList().map(x=>x.r.id+x.r.st+x.r.items.map(i=>i.v?1:0).join('')),KDS.stn,Math.floor(Date.now()/60000)])}
-function bKds(){const el=document.getElementById('bzb')||$('#app');if(!el)return;const L=kdsList(),stns=[...new Set(L.flatMap(x=>x.r.items.map(i=>i.stn||'')).filter(Boolean))];
-  const ids=L.filter(x=>x.r.st==='new').map(x=>x.r.id);if(KDS.seen){if(ids.some(i=>!KDS.seen.has(i)))try{rxBeep()}catch(e){}}KDS.seen=new Set(ids);
-  const f=x=>{const its=x.r.items.filter(i=>KDS.stn==='all'||i.stn===KDS.stn);return its.length?{...x,its}:null};
-  const col=(st,ttl,btn)=>{const A=L.filter(x=>x.r.st===st).map(f).filter(Boolean);return `<div class='kdsc'><div class='kdsh'><b>${ttl}</b><span>${A.length}</span></div>${A.map(x=>{const mins=Math.max(0,Math.round((Date.now()-x.r.at)/60000));return `<div class='kdst ${st} ${mins>=15&&st!=='ready'?'late':''}'><div class='kdsth'><b>${esc(x.c.tb)}</b><small>${mins} min · ${esc(x.r.by)}</small></div>${x.its.map(i=>`<div class='kdsi ${i.v?'v':''}'><b>${i.q} ×</b> ${esc(i.name)}${i.stn?`<small class='kdsn'>${esc(i.stn)}</small>`:''}${i.nt?`<div class='kdsnt'>→ ${esc(i.nt)}</div>`:''}${i.v?`<div class='kdsnt'>VOID · ${esc(i.vr||'')}</div>`:''}</div>`).join('')}<button class='go' data-kdst='${esc(x.c.tb)}|${x.r.id}|${btn[0]}'>${btn[1]}</button></div>`}).join('')||`<div class='empty' style='padding:18px 8px'>Nothing here</div>`}</div>`};
-  el.innerHTML=`<div class='card'><div class='hd'>Kitchen<span class='pc2'>${L.length} open</span></div><p class='sub' style='margin:0 0 10px'>New orders from the tables appear here. Tap <b>Take order</b> to accept it: from then the waiter can take payment and the items are locked.</p>${stns.length?`<div class='chipsr' style='margin-bottom:10px'><button class='${KDS.stn==='all'?'on':''}' data-kdsstn='all'>All</button>${stns.map(s=>`<button class='${KDS.stn===s?'on':''}' data-kdsstn='${esc(s)}'>${esc(s)}</button>`).join('')}</div>`:''}<div class='kdsg'>${col('new','New',['prep','Take order'])}${col('prep','Preparing',['ready','Mark ready'])}${col('ready','Ready to serve',['done','Served'])}</div></div>`;KDS.sig=kdsSig()}
+/* one card per ticket and station; a card sits in the column of its least advanced item */
+function kdsCards(){const out=[];kdsList().forEach(({c,r})=>{const g={};r.items.forEach(i=>{(g[rxStnName(i)]=g[rxStnName(i)]||[]).push(i)});
+  Object.keys(g).forEach(n=>{const its=g[n],live=its.filter(i=>!i.v);if(!live.length)return;const st=live.map(i=>rxIs(r,i)).sort((a,b)=>rxOrd[a]-rxOrd[b])[0];if(st==='done')return;out.push({c,r,stn:n,its,st})})});return out}
+function kdsSig(){const K=kdsCards();return JSON.stringify([K.map(x=>x.r.id+x.stn+x.st+x.its.map(i=>(i.v?'v':'')+i.q).join()),KDS.stn,(K.some(x=>rxHold(x.r,x.stn))?Math.floor(Date.now()/1000):Math.floor(Date.now()/60000))])}
+function bKds(){const el=document.getElementById('bzb')||$('#app');if(!el)return;const K=kdsCards(),stns=[...new Set(K.map(x=>x.stn))],multi=stns.length>1;
+  const ids=K.filter(x=>x.st==='new').map(x=>x.r.id+x.stn);if(KDS.seen){if(ids.some(i=>!KDS.seen.has(i)))try{rxBeep()}catch(e){}}KDS.seen=new Set(ids);
+  const col=(st,ttl,btn)=>{const A=K.filter(x=>x.st===st&&(KDS.stn==='all'||x.stn===KDS.stn));return `<div class='kdsc'><div class='kdsh'><b>${ttl}</b><span>${A.length}</span></div>${A.map(x=>{const mins=Math.max(0,Math.round((Date.now()-x.r.at)/60000)),h=st==='new'?rxHold(x.r,x.stn):0,key=esc(x.c.tb)+'|'+x.r.id+'|'+btn[0]+'|'+esc(x.stn);
+    return `<div class='kdst ${st} ${mins>=15&&st!=='ready'?'late':''}'><div class='kdsth'><b>${esc(x.c.tb)}${multi?` <span class='kdsn'>${esc(x.stn)}</span>`:''}</b><small>${mins} min · ${esc(x.r.by)}</small></div>${x.its.map(i=>`<div class='kdsi ${i.v?'v':''}'><b>${i.q} ×</b> ${esc(i.name)}${i.nt?`<div class='kdsnt'>→ ${esc(i.nt)}</div>`:''}${i.v?`<div class='kdsnt'>VOID · ${esc(i.vr||'')}</div>`:''}</div>`).join('')}${h?`<div class='kdshold'>On hold · the guest can still change this · <b>${rxMmss(h-Date.now())}</b></div><div class='kdsrow'><button class='go' disabled>Take order</button><button class='ghost' data-kdsnow='${key}'>Start now</button></div>`:`<button class='go' data-kdst='${key}'>${btn[1]}</button>`}</div>`}).join('')||`<div class='empty' style='padding:18px 8px'>Nothing here</div>`}</div>`};
+  el.innerHTML=`<div class='card'><div class='hd'>Kitchen<span class='pc2'>${K.length} open</span></div><p class='sub' style='margin:0 0 10px'>New orders appear at once. While an order is <b>on hold</b>, the guest or waiter can still change it. After the hold, tap <b>Take order</b>: those items lock and the waiter can take payment. If it is quiet, <b>Start now</b> starts early.</p>${stns.length>1?`<div class='chipsr' style='margin-bottom:10px'><button class='${KDS.stn==='all'?'on':''}' data-kdsstn='all'>All</button>${stns.map(s=>`<button class='${KDS.stn===s?'on':''}' data-kdsstn='${esc(s)}'>${esc(s)}</button>`).join('')}</div>`:''}<div class='kdsg'>${col('new','New',['prep','Take order'])}${col('prep','Preparing',['ready','Mark ready'])}${col('ready','Ready to serve',['done','Served'])}</div></div>`;KDS.sig=kdsSig()}
 clearInterval(KDS.t);KDS.t=setInterval(()=>{try{if(tab==='biz'&&bz==='kds'&&!document.hidden&&kdsSig()!==KDS.sig)bKds()}catch(e){}},2000);
 /* settings toggles */
 (function(){const _s=setts;setts=function(){_s.apply(this,arguments);try{if(sm!=='shop'||!mgr()||!rxOn()||document.getElementById('kdsset'))return;const c=document.getElementById('btcard');if(!c)return;
-  c.insertAdjacentHTML('beforeend',`<div id='kdsset' style='margin-top:12px'><label class='kdsl'><input type='checkbox' data-rxkdsset ${S.rxKds!==false?'checked':''}> <span><b>Kitchen takes the order before payment</b><small class='sub'>Waiters send orders to the Kitchen screen. Once the kitchen takes it, items lock and payment opens. Turn off if you only want a simple till.</small></span></label><label class='kdsl'><input type='checkbox' data-rxprintset ${S.rxPrint?'checked':''}> <span><b>Also print a kitchen ticket</b><small class='sub'>Prints an 80mm ticket each time an order is sent.</small></span></label></div>`)}catch(e){}}})();
+  c.insertAdjacentHTML('beforeend',`<div id='kdsset' style='margin-top:12px'><label class='kdsl'><input type='checkbox' data-rxkdsset ${S.rxKds!==false?'checked':''}> <span><b>Kitchen takes the order before payment</b><small class='sub'>Waiters send orders to the Kitchen screen. Once the kitchen takes it, items lock and payment opens. Turn off if you only want a simple till.</small></span></label><div class='g2' style='margin-top:6px'><div><span class='fl'>Waiters: kitchen waits (min)</span><input type='number' min='0' max='120' inputmode='numeric' id='rxww' value='${+S.rxWw||0}'><small class='sub'>The kitchen cannot start an order until this many minutes after it is sent. Waiters can change it until the kitchen takes it. 0 = no wait.</small></div><div><span class='fl'>Customers: can change for (min)</span><input type='number' min='0' max='120' inputmode='numeric' id='rxcw' value='${S.rxCw==null?2:+S.rxCw}'><small class='sub'>QR customers can change their order for this long, and the kitchen waits for it. After that only waiters can change it. 0 = customers cannot change.</small></div></div><label class='kdsl'><input type='checkbox' data-rxprintset ${S.rxPrint?'checked':''}> <span><b>Also print a kitchen ticket</b><small class='sub'>Prints an 80mm ticket each time an order is sent.</small></span></label></div>`)}catch(e){}}})();
 /* sample dish pictures */
 function rxSmImg(){let n=0;S.products.forEach(p=>{if(p.smp&&p.dish&&!p.img&&RXIMG[p.name]){p.img=RXIMG[p.name];n++}});return n}
 (function(){const _k=kitSync;kitSync=function(){const r=_k.apply(this,arguments);rxSmImg();return r};const _s=rxSample;rxSample=function(){const r=_s.apply(this,arguments);if(rxSmImg())save();return r}})();
