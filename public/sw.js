@@ -1,7 +1,7 @@
 /* Atoll POS service worker: keeps the app and its libraries on the device so it opens with no internet.
    Shop data is stored separately by the app (IndexedDB) and never passes through here. */
-const V = 'atoll-sw-5'
-const SHELL = ['/', '/index.html', '/config.js', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png']
+const V = 'atoll-sw-7'
+const SHELL = ['/', '/index.html', '/config.js', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/favicon.svg']
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
@@ -55,4 +55,33 @@ self.addEventListener('fetch', (e) => {
     return e.respondWith(networkFirst(req))
   }
   if (/cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com/.test(u.hostname)) return e.respondWith(cacheFirst(req))
+})
+
+/* ---- Push notifications (kitchen tickets, QR orders, ready to serve) ---- */
+self.addEventListener('push', (e) => {
+  let d = {}
+  try { d = e.data ? e.data.json() : {} } catch (_) { d = { title: 'Atoll POS', body: e.data ? e.data.text() : '' } }
+  e.waitUntil((async () => {
+    // If the app is open and in front, it already plays its own sound and shows its own alert.
+    const cs = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    if (cs.some((c) => c.visibilityState === 'visible')) return
+    await self.registration.showNotification(d.title || 'Atoll POS', {
+      body: d.body || '',
+      tag: d.tag || d.topic || 'atoll',
+      renotify: true,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [300, 120, 300, 120, 300],
+      requireInteraction: d.topic === 'qr' || d.topic === 'kitchen',
+      data: { url: d.url || '/' },
+    })
+  })())
+})
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close()
+  e.waitUntil((async () => {
+    const cs = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    for (const c of cs) { if ('focus' in c) { await c.focus(); return } }
+    await self.clients.openWindow((e.notification.data && e.notification.data.url) || '/')
+  })())
 })

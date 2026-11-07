@@ -858,6 +858,7 @@ html.lgdv .lpgdh h2,html.lgdv .lpgdo h3{line-height:1.45;letter-spacing:0}html.l
 .pxmk{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--mut)}.pxmk span{flex:1}.pxmk input{width:84px}
 .pxtg{display:flex;gap:12px;align-items:flex-start;margin-top:14px;padding:12px;border-radius:14px;background:var(--bg);cursor:pointer}
 .pxtg input{width:20px;height:20px;margin-top:2px;flex:none}.pxtg span{display:flex;flex-direction:column;gap:2px}.pxtg small{color:var(--mut);font-size:12.5px}
+.pxtg{align-items:center!important;font-size:14px;font-weight:600;color:var(--ink);line-height:1.35}.pxtg input[type=checkbox]{margin:0!important;padding:0!important;min-height:0!important;width:20px;height:20px;accent-color:var(--btn)}.pxtg span{font-size:14px;font-weight:600;text-transform:none;letter-spacing:0;margin:0}.pxtg span b{font-weight:700}
 .pxi{display:flex;gap:6px}.pxi input{min-width:0;flex:1}.pxi button{flex:none;padding:0 12px;border-radius:12px;background:var(--ln);font-weight:700;font-size:13px}
 .pxr{display:grid;grid-template-columns:1fr 84px 36px;gap:8px;align-items:center;margin-bottom:8px}
 .pxr button{font-size:22px;line-height:1}
@@ -982,11 +983,19 @@ button{transition:transform .12s ease,background-color .18s ease,color .18s ease
 .kdshold{margin:8px 0 6px;padding:6px 10px;border-radius:10px;background:#fff4e0;color:#8a5200;font-size:12.5px}
 .kdshold b{font-variant-numeric:tabular-nums}
 .kdst .kdsrow{margin-top:6px}.kdst .kdsrow .go{margin-top:0}
+label.chk input[type=checkbox]{flex:none;width:20px;height:20px;min-height:0;padding:0;margin:0;accent-color:var(--btn)}
+#btcard .g2 input{height:auto}
+#rxnb{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;right:10px;z-index:90;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;pointer-events:none}
+.rxnbi{pointer-events:auto}.rxnbi button{border:0;border-radius:99px;padding:12px 18px;font:inherit;font-weight:800;font-size:15px;color:#fff;box-shadow:0 6px 20px #0004;cursor:pointer;background:#c2410c}
+.rxnbi.kitchen button{background:#b45309}.rxnbi.ready button{background:#15803d}
+#rxnb.fl .rxnbi button{animation:rxpulse .7s ease 3}
+@keyframes rxpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@media(prefers-reduced-motion:reduce){#rxnb.fl .rxnbi button{animation:none}}
 </style>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>')</script>
-<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#0f9f8f"><link rel="apple-touch-icon" href="/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"></head>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#0f9f8f"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"><link rel="shortcut icon" href="/favicon.ico"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"></head>
 <body>
 <header class="tb" id="tb"></header><main id="app"><div class='spl' role='status' aria-live='polite'><div class='splscene'><svg viewBox='0 0 320 200' aria-hidden='true'><defs><linearGradient id='splsky' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='var(--sk1)'/><stop offset='1' stop-color='var(--sk2)'/></linearGradient><clipPath id='splclip'><rect width='320' height='200' rx='28'/></clipPath></defs><g clip-path='url(#splclip)'><rect width='320' height='200' fill='url(#splsky)'/><g class='spls' fill='#fff'><circle cx='40' cy='28' r='1.4'/><circle cx='96' cy='46' r='1.1'/><circle cx='150' cy='20' r='1.5'/><circle cx='214' cy='34' r='1.1'/><circle cx='284' cy='24' r='1.4'/><circle cx='262' cy='62' r='1'/></g><g class='splsun'><circle class='splhalo' cx='236' cy='112' r='40' fill='var(--sun)' opacity='.22'/><circle cx='236' cy='112' r='24' fill='var(--sun)'/></g><g class='splbird b1' fill='none' stroke='var(--bird)' stroke-width='2' stroke-linecap='round'><path d='M0 0q5-6 10 0q5-6 10 0'/></g><g class='splbird b2' fill='none' stroke='var(--bird)' stroke-width='1.6' stroke-linecap='round'><path d='M0 0q4-5 8 0q4-5 8 0'/></g><path d='M-10 134Q34 116 86 134Z' fill='var(--isl)'/><g class='splpalm' stroke-linecap='round' fill='none'><path d='M52 128Q56 112 50 96' stroke='var(--trunk)' stroke-width='3'/><g stroke='var(--frond)' stroke-width='3'><path d='M50 96Q38 86 26 93'/><path d='M50 96Q44 82 32 78'/><path d='M50 96Q57 82 69 82'/><path d='M50 96Q64 89 76 98'/><path d='M50 96Q49 82 52 74'/></g></g><g class='splw w1' fill='var(--w1)'><path d='M-80 134q20-9 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0V200H-80Z'/></g><g transform='translate(156 142)'><g class='splboat'><ellipse cx='4' cy='13' rx='54' ry='3.5' fill='var(--w3)' opacity='.35'/><g class='splsail'><path d='M5-62L-36-10H5Z' fill='var(--sail1)'/><path d='M8-58L56-12H8Z' fill='var(--sail2)'/></g><path d='M5-10V-64' stroke='var(--hull)' stroke-width='2.6' stroke-linecap='round'/><path class='splflag' d='M5-64l15 4-15 4Z' fill='var(--acc2)'/><path d='M-50-8Q-10-2 24-6Q46-9 58-27Q61-12 50 0Q38 12 6 12L-34 12Q-48 10-50-8Z' fill='var(--hull)'/><path d='M-46-4Q-10 1 28-3Q46-6 56-19' fill='none' stroke='var(--acc2)' stroke-width='2.2' stroke-linecap='round'/></g></g><g class='splw w2' fill='var(--w2)'><path d='M-80 150q20-9 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0V200H-80Z'/></g><g class='splw w3' fill='var(--w3)'><path d='M-80 168q20-9 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0V200H-80Z'/></g><g class='splsp' stroke='#fff' stroke-width='2' stroke-linecap='round'><path d='M206 148h12'/><path d='M226 154h8'/><path d='M120 160h10'/><path d='M60 154h8'/></g></g></svg></div><div class='splmk' data-nt>Atoll POS</div><div class='splmsg'><span>Loading…</span></div><div class='splbar'><i></i></div></div></main><div id="m"></div><nav class="dw" id="nav"></nav><div id="scrim"></div>
 <script>
@@ -5131,7 +5140,7 @@ function exForm(){const d=EXS.draft||(EXS.draft={paid:true,m:'Cash',date:ymd(Dat
   <label class='pxtg' style='margin-top:12px'><input type='checkbox' id='xrc' ${d.rec?'checked':''}><span>Repeat this expense</span></label>
   <div id='xrb' ${d.rec?'':'hidden'}><select id='xe'><option value='month' ${d.every!=='week'?'selected':''}>Every month</option><option value='week' ${d.every==='week'?'selected':''}>Every week</option></select><small class='sub'>A bill is created on each date so nothing gets forgotten.</small></div>
   <p class='ntc' id='xerr' style='color:var(--acc);margin:8px 0 0'></p>
-  <div style='display:flex;gap:10px;margin-top:12px'><button class='ghost' data-close style='flex:1'>Cancel</button><button class='go' style='flex:2' data-xpsave>Save expense</button></div></div></div>`}
+  <div style='display:flex;gap:10px;margin-top:12px;align-items:stretch'><button class='ghost' data-close style='flex:1;margin:0'>Cancel</button><button class='go' style='flex:2;margin:0' data-xpsave>Save expense</button></div></div></div>`}
 function exRead(){const g=i=>{const e=document.getElementById(i);return e?e.value:''},d=EXS.draft;
   Object.assign(d,{desc:g('xd').trim(),amt:+g('xa')||0,cat:g('xc').trim(),ven:g('xv').trim(),bill:g('xb').trim(),date:g('xdt'),due:g('xdu'),gst:Math.max(0,+g('xg')||0),paid:!!(document.getElementById('xpd')||{}).checked,m:g('xm')||'Cash',ref:g('xr').trim(),notes:g('xn').trim(),rec:!!(document.getElementById('xrc')||{}).checked,every:g('xe')||'month'});return d}
 function exCash(o){const e={at:o.at,t:'out',m:o.m||'Cash',a:o.amt,note:o.desc,gst:o.gst||0,cat:o.cat||'',ex:1};if(o.ven)e.ven=o.ven;if(o.bill)e.bill=o.bill;if(o.ref)e.ref=o.ref;if(o.img)e.img=o.img;if(o.notes)e.nt=o.notes;return e}
@@ -5237,9 +5246,9 @@ document.addEventListener('input',e=>{if(e.target&&e.target.id==='rxsn'){const n
 /* business type card in Settings */
 (function(){const _s=setts;setts=function(){_s.apply(this,arguments);try{if(sm!=='shop'||!mgr()||document.getElementById('btcard'))return;const app=$('#app');if(!app)return;
   app.insertAdjacentHTML('afterbegin',`<div class='card' id='btcard'><div class='hd'>Business type</div><p class='sub' style='margin:0 0 10px'>Switch on the till tools that suit how you work. You can change this at any time.</p><div class='chipsr'><button class='${S.btype!=='restaurant'?'on':''}' data-btype='retail'>Shop or retail</button><button class='${S.btype==='restaurant'?'on':''}' data-btype='restaurant'>Restaurant or café</button></div><small class='sub'>Salon and wholesale tools are coming next.</small>
-  ${rxOn()?`<div class='g2' style='margin-top:12px'><div><span class='fl'>Service charge (%)</span><input type='number' min='0' max='30' step='0.5' id='bsvc' value='${+S.svcp||0}'></div><div><span class='fl'>Tables</span><button class='ghost' style='width:100%' data-rxpick>Manage tables</button></div></div>`:''}</div>`)}catch(e){}}})();
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-btype]');if(!b||!mgr())return;S.btype=b.dataset.btype;if(rxOn()&&S.svcp==null)S.svcp=10;save();RX.loaded=0;setts()});
-document.addEventListener('change',e=>{if(e.target&&e.target.id==='bsvc'){S.svcp=Math.max(0,Math.min(30,+e.target.value||0));save()}});
+  ${rxOn()?`<div class='g2' style='margin-top:12px'><div><span class='fl'>Service charge (%)</span><input type='number' min='0' max='50' step='0.5' id='bsvc' value='${+S.svcp||0}' ${me.role==='owner'?'':'disabled'}><small style='display:block;color:var(--mut);margin-top:4px'>${me.role==='owner'?'You decide the percentage. 0 means no service charge.':'Only the owner can change this.'}</small></div><div><span class='fl'>Tables</span><button class='ghost' style='width:100%' data-rxpick>Manage tables</button></div></div>`:''}</div>`)}catch(e){}}})();
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-btype]');if(!b||!mgr())return;S.btype=b.dataset.btype;save();RX.loaded=0;setts()});
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='bsvc'){if(me.role!=='owner')return;S.svcp=Math.max(0,Math.min(50,Math.round((+e.target.value||0)*2)/2));e.target.value=S.svcp;save();if(typeof rxSync==='function'&&rxOn())try{rxSync()}catch(x){}toast('Service charge set to '+S.svcp+'%')}});
 (function(){var __m={},__c={};function __r(n){n=n.replace(/^\.\//,'');if(__c[n])return __c[n].exports;var m={exports:{}};__c[n]=m;__m[n](m,m.exports,__r);return m.exports}
 __m['QRErrorCorrectLevel']=function(module,exports,require){module.exports = {
 	L : 1,
@@ -6521,7 +6530,7 @@ function rxBeep(){try{const a=new(window.AudioContext||window.webkitAudioContext
 async function rxFetch(){if(!rxOn()||!S.menuOn||typeof CLOUD==='undefined'||!CLOUD||!sbc||!me||!cl.shop)return;
   try{const r=await sbc.from('table_orders').select('*').eq('shop_id',cl.shop).eq('status','new').order('created_at',{ascending:true});if(r.error||!r.data)return;
     const fresh=r.data.filter(o=>!RXQ.seen[o.id]);r.data.forEach(o=>RXQ.seen[o.id]=1);const had=RXQ.inc.length;RXQ.inc=r.data;
-    if(fresh.length&&RXQ.ready){rxBeep();toast('New order from '+dname(fresh[0].tbl)+(fresh.length>1?' and '+(fresh.length-1)+' more':''))}
+    if(fresh.length&&RXQ.ready){rxAlert('order','New order from '+dname(fresh[0].tbl)+(fresh.length>1?' and '+(fresh.length-1)+' more':''))}
     try{const e=await sbc.from('table_orders').select('*').eq('shop_id',cl.shop).in('status',['accepted','cancelled']).gte('created_at',new Date(Date.now()-2*36e5).toISOString());if(!e.error&&e.data){const todo=e.data.filter(o=>(o.rev||1)>1&&(o.rev||1)>(o.applied||0));if(todo.length)await rxApplyEdits(todo)}}catch(x){}
     RXQ.ready=1;if(had!==RXQ.inc.length){if(document.querySelector('#rxcv')&&!RXQ.edit)rxFloor();if(tab==='pos'&&usv==='items')try{refreshTabs();lines()}catch(e){}}}catch(e){}}
 setInterval(rxFetch,8000);setTimeout(rxFetch,2500);
@@ -6550,7 +6559,7 @@ async function rxApplyEdits(list){let any=0;
     if(o.status==='accepted'){const want=(o.items||[]).map(i=>({...i,qty:i.qty-(keep[i.id]||0)})).filter(i=>i.qty>0);rxQLines(c,{...o,items:want})}
     c.rounds.forEach(rxRSync);if(typeof rxKds==='function'&&rxKds())rxSendC(c,true);
     rxSyncC(c);if(c===carts[acx])loadCart(acx);any=1;toast((o.status==='cancelled'?'Customer cancelled their order at ':'Customer changed their order at ')+name)}
-  if(any){rxPersist();save();try{rxBeep()}catch(e){}if(tab==='pos'&&usv==='items'){try{refreshTabs();lines()}catch(e){}}else if(document.querySelector('#rxcv')&&!RXQ.edit)rxFloor()}}
+  if(any){rxPersist();save();try{rxBeep('changed')}catch(e){}if(tab==='pos'&&usv==='items'){try{refreshTabs();lines()}catch(e){}}else if(document.querySelector('#rxcv')&&!RXQ.edit)rxFloor()}}
 async function rxReject(id){if(!await rxSetStatus(id,'rejected')){toast('Could not update. Check your connection.',1);return}RXQ.inc=RXQ.inc.filter(x=>x.id!==id);rxInbox()}
 /* toolbar chip for incoming orders + menu card in Settings */
 (function(){const _ci=uCartInner;uCartInner=function(){let h=_ci.apply(this,arguments);if(rxOn()&&RXQ.inc.length)h=h.replace("<button class='rxch' data-rxsplit>Split</button>",`<button class='rxch on' data-rxinbox>Orders (${RXQ.inc.length})</button><button class='rxch' data-rxsplit>Split</button>`);return h};
@@ -6792,7 +6801,7 @@ function rxSampleDel(){const n=S.products.filter(p=>p.smp).length;if(!n||!confir
   const _pr=pr;pr=function(){_pr.apply(this,arguments);try{if(rxOn()&&none()&&can('prodedit')){const a=$('#app');if(a&&!document.getElementById('rxsmp'))a.insertAdjacentHTML('afterbegin',call)}}catch(e){}};
   const _rd=rxDash;rxDash=function(){_rd.apply(this,arguments);try{if(none()&&can('prodedit')){const a=$('#app');if(a&&!document.getElementById('rxsmp'))a.insertAdjacentHTML('beforeend',call)}}catch(e){}};
   const _s=setts;setts=function(){_s.apply(this,arguments);try{const c=document.getElementById('btcard');if(!c||!rxOn()||document.getElementById('rxsetx'))return;
-    c.insertAdjacentHTML('beforeend',`<div id='rxsetx' style='margin-top:14px;border-top:1px solid var(--ln);padding-top:12px'><label class='pxtg'><input type='checkbox' data-rxstrict ${S.rxStrict?'checked':''}><span>Stop selling a dish when its ingredients run out</span></label><p class='sub' style='margin:4px 0 0'>Off by default: dishes always sell, and the ingredients still count down so you see what is running low.</p><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:12px'><button class='ghost' data-rxsample>Add sample halal menu</button>${sample()?`<button class='ghost danger' data-rxsampledel>Remove sample items</button>`:''}</div></div>`)}catch(e){}};
+    c.insertAdjacentHTML('beforeend',`<div id='rxsetx' style='margin-top:14px;border-top:1px solid var(--ln);padding-top:12px'><label class='chk'><input type='checkbox' data-rxstrict ${S.rxStrict?'checked':''}>Stop selling a dish when its ingredients run out</label><p class='sub' style='margin:2px 0 0 30px'>Off by default: dishes always sell, and the ingredients still count down so you see what is running low.</p><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:12px'><button class='ghost' data-rxsample>Add sample halal menu</button>${sample()?`<button class='ghost danger' data-rxsampledel>Remove sample items</button>`:''}</div></div>`)}catch(e){}};
   document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rxsample],[data-rxsampledel]');if(!b)return;if('rxsample' in b.dataset){if(can('prodedit'))rxSample()}else rxSampleDel()});
   document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&'rxstrict' in t.dataset){S.rxStrict=t.checked;kitSync();save();toast(t.checked?'Dishes stop selling when ingredients run out.':'Dishes always sell.')}});
 })();
@@ -6843,7 +6852,7 @@ function rxSendC(c,quiet){const arr=c===carts[acx]?cart:c.cart;const L=arr.filte
   const items=L.map(l=>{if(!l.lid)l.lid=rxRid();const q=Math.round((l.qty-(l.sent||0))*1000)/1000;l.sent=l.qty;return{lid:l.lid,name:l.name,q,nt:l.nt||'',stn:rxStn(l),at:Date.now(),s:stt,l:{...l,sent:0}}});
   rxRoundsOf(c);let r=rxKds()?c.rounds.find(x=>x.st==='new'):null;
   if(r){items.forEach(it=>{const e=r.items.find(x=>x.lid===it.lid&&!x.v&&rxIs(r,x)==='new');if(e){e.q=Math.round((e.q+it.q)*1000)/1000;e.l=it.l;e.at=it.at}else r.items.push(it)});r.mod=Date.now()}
-  else{r={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),at:Date.now(),by:me.name,tb:c.tb,st:stt,items};c.rounds.push(r)}
+  else{r={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),at:Date.now(),by:me.name,uid:(typeof cl!=='undefined'&&cl.uid)||'',tb:c.tb,st:stt,items};c.rounds.push(r)}
   if(S.rxPrint&&!quiet)rxPrintRound({...r,items});return r}
 function rxKitchen(){saveCur();const c=carts[acx]||{};if(!c.tb){toast('Choose a table first.');return}
   if(!cart.some(l=>!l.sv&&l.qty>(l.sent||0)+1e-9)){toast('Nothing new to send to the kitchen.');return}
@@ -6879,7 +6888,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset)return
   if(t.id==='rxcw'){S.rxCw=Math.max(0,Math.min(120,Math.floor(+t.value)||0));t.value=S.rxCw;save();toast('Saved')}},true);
 /* kitchen screen */
 /* the kitchen starts / finishes one station's items of a ticket. force = start now, before the change time is over */
-function rxRoundSet(tb,id,st,force,stn){if(!can('kitchen')){toast('Only kitchen staff can do this.',1);return}const c=carts.find(x=>x.tb===tb);if(!c)return;const r=(c.rounds||[]).find(x=>x.id===id);if(!r)return;
+function rxRoundSet(tb,id,st,force,stn){if(!can('kitchen')&&!(st==='done'&&can('sell'))){toast('Only kitchen staff can do this.',1);return}const c=carts.find(x=>x.tb===tb);if(!c)return;const r=(c.rounds||[]).find(x=>x.id===id);if(!r)return;
   const from={prep:'new',ready:'prep',done:'ready'}[st];if(!from)return;
   const G=r.items.filter(i=>!i.v&&rxIs(r,i)===from&&(stn===undefined||(i.stn||'Kitchen')===stn));if(!G.length)return;
   if(st==='prep'&&!force){const h=rxHold(r,stn);if(h){toast('The kitchen can start this in '+rxMmss(h-Date.now())+'.',1);return}}
@@ -6895,14 +6904,13 @@ function kdsCards(){const out=[];kdsList().forEach(({c,r})=>{const g={};r.items.
   Object.keys(g).forEach(n=>{const its=g[n],live=its.filter(i=>!i.v);if(!live.length)return;const st=live.map(i=>rxIs(r,i)).sort((a,b)=>rxOrd[a]-rxOrd[b])[0];if(st==='done')return;out.push({c,r,stn:n,its,st})})});return out}
 function kdsSig(){const K=kdsCards();return JSON.stringify([K.map(x=>x.r.id+x.stn+x.st+x.its.map(i=>(i.v?'v':'')+i.q).join()),KDS.stn,(K.some(x=>rxHold(x.r,x.stn))?Math.floor(Date.now()/1000):Math.floor(Date.now()/60000))])}
 function bKds(){const el=document.getElementById('bzb')||$('#app');if(!el)return;const K=kdsCards(),stns=[...new Set(K.map(x=>x.stn))],multi=stns.length>1;
-  const ids=K.filter(x=>x.st==='new').map(x=>x.r.id+x.stn);if(KDS.seen){if(ids.some(i=>!KDS.seen.has(i)))try{rxBeep()}catch(e){}}KDS.seen=new Set(ids);
   const col=(st,ttl,btn)=>{const A=K.filter(x=>x.st===st&&(KDS.stn==='all'||x.stn===KDS.stn));return `<div class='kdsc'><div class='kdsh'><b>${ttl}</b><span>${A.length}</span></div>${A.map(x=>{const mins=Math.max(0,Math.round((Date.now()-x.r.at)/60000)),h=st==='new'?rxHold(x.r,x.stn):0,key=esc(x.c.tb)+'|'+x.r.id+'|'+btn[0]+'|'+esc(x.stn);
     return `<div class='kdst ${st} ${mins>=15&&st!=='ready'?'late':''}'><div class='kdsth'><b>${esc(x.c.tb)}${multi?` <span class='kdsn'>${esc(x.stn)}</span>`:''}</b><small>${mins} min · ${esc(x.r.by)}</small></div>${x.its.map(i=>`<div class='kdsi ${i.v?'v':''}'><b>${i.q} ×</b> ${esc(i.name)}${i.nt?`<div class='kdsnt'>→ ${esc(i.nt)}</div>`:''}${i.v?`<div class='kdsnt'>VOID · ${esc(i.vr||'')}</div>`:''}</div>`).join('')}${h?`<div class='kdshold'>On hold · the guest can still change this · <b>${rxMmss(h-Date.now())}</b></div><div class='kdsrow'><button class='go' disabled>Take order</button><button class='ghost' data-kdsnow='${key}'>Start now</button></div>`:`<button class='go' data-kdst='${key}'>${btn[1]}</button>`}</div>`}).join('')||`<div class='empty' style='padding:18px 8px'>Nothing here</div>`}</div>`};
   el.innerHTML=`<div class='card'><div class='hd'>Kitchen<span class='pc2'>${K.length} open</span></div><p class='sub' style='margin:0 0 10px'>New orders appear at once. While an order is <b>on hold</b>, the guest or waiter can still change it. After the hold, tap <b>Take order</b>: those items lock and the waiter can take payment. If it is quiet, <b>Start now</b> starts early.</p>${stns.length>1?`<div class='chipsr' style='margin-bottom:10px'><button class='${KDS.stn==='all'?'on':''}' data-kdsstn='all'>All</button>${stns.map(s=>`<button class='${KDS.stn===s?'on':''}' data-kdsstn='${esc(s)}'>${esc(s)}</button>`).join('')}</div>`:''}<div class='kdsg'>${col('new','New',['prep','Take order'])}${col('prep','Preparing',['ready','Mark ready'])}${col('ready','Ready to serve',['done','Served'])}</div></div>`;KDS.sig=kdsSig()}
 clearInterval(KDS.t);KDS.t=setInterval(()=>{try{if(tab==='biz'&&bz==='kds'&&!document.hidden&&kdsSig()!==KDS.sig)bKds()}catch(e){}},2000);
 /* settings toggles */
 (function(){const _s=setts;setts=function(){_s.apply(this,arguments);try{if(sm!=='shop'||!mgr()||!rxOn()||document.getElementById('kdsset'))return;const c=document.getElementById('btcard');if(!c)return;
-  c.insertAdjacentHTML('beforeend',`<div id='kdsset' style='margin-top:12px'><label class='kdsl'><input type='checkbox' data-rxkdsset ${S.rxKds!==false?'checked':''}> <span><b>Kitchen takes the order before payment</b><small class='sub'>Waiters send orders to the Kitchen screen. Once the kitchen takes it, items lock and payment opens. Turn off if you only want a simple till.</small></span></label><div class='g2' style='margin-top:6px'><div><span class='fl'>Waiters: kitchen waits (min)</span><input type='number' min='0' max='120' inputmode='numeric' id='rxww' value='${+S.rxWw||0}'><small class='sub'>The kitchen cannot start an order until this many minutes after it is sent. Waiters can change it until the kitchen takes it. 0 = no wait.</small></div><div><span class='fl'>Customers: can change for (min)</span><input type='number' min='0' max='120' inputmode='numeric' id='rxcw' value='${S.rxCw==null?2:+S.rxCw}'><small class='sub'>QR customers can change their order for this long, and the kitchen waits for it. After that only waiters can change it. 0 = customers cannot change.</small></div></div><label class='kdsl'><input type='checkbox' data-rxprintset ${S.rxPrint?'checked':''}> <span><b>Also print a kitchen ticket</b><small class='sub'>Prints an 80mm ticket each time an order is sent.</small></span></label></div>`)}catch(e){}}})();
+  c.insertAdjacentHTML('beforeend',`<div id='kdsset' style='margin-top:14px;border-top:1px solid var(--ln);padding-top:12px'><label class='chk'><input type='checkbox' data-rxkdsset ${S.rxKds!==false?'checked':''}>Kitchen takes the order before payment</label><p class='sub' style='margin:2px 0 0 30px'>Waiters send orders to the Kitchen screen. Once the kitchen starts them, items lock and payment opens. Turn off if you only want a simple till.</p><label class='chk'><input type='checkbox' data-rxprintset ${S.rxPrint?'checked':''}>Also print a kitchen ticket</label><p class='sub' style='margin:2px 0 0 30px'>Prints an 80mm ticket each time an order is sent.</p><div class='g2' style='margin-top:14px'><div><span class='fl'>Waiters: kitchen waits (min)</span><input type='number' min='0' max='120' inputmode='numeric' id='rxww' value='${+S.rxWw||0}'></div><div><span class='fl'>Customers: can change for (min)</span><input type='number' min='0' max='120' inputmode='numeric' id='rxcw' value='${S.rxCw==null?2:+S.rxCw}'></div></div><p class='sub' style='margin:6px 0 0'>Waiters: the kitchen cannot start an order until this many minutes after it is sent (0 = no wait). Customers: QR guests can change their order for this long, and the kitchen waits for it (0 = they cannot change). Waiters can change an order until the kitchen starts it.</p></div>`)}catch(e){}}})();
 /* sample dish pictures */
 function rxSmImg(){let n=0;S.products.forEach(p=>{if(p.smp&&p.dish&&!p.img&&RXIMG[p.name]){p.img=RXIMG[p.name];n++}});return n}
 (function(){const _k=kitSync;kitSync=function(){const r=_k.apply(this,arguments);rxSmImg();return r};const _s=rxSample;rxSample=function(){const r=_s.apply(this,arguments);if(rxSmImg())save();return r}})();
@@ -6925,6 +6933,194 @@ function rxSmImg(){let n=0;S.products.forEach(p=>{if(p.smp&&p.dish&&!p.img&&RXIM
   /* page transition when the screen changes */
   let last='';const _r=render;render=function(){const x=_r.apply(this,arguments);try{const s=sig();if(last&&s!==last&&!matchMedia('(prefers-reduced-motion:reduce)').matches){const a=document.getElementById('app');if(a){a.classList.remove('pgin');void a.offsetWidth;a.classList.add('pgin');clearTimeout(a._pg);a._pg=setTimeout(()=>a.classList.remove('pgin'),300)}}last=s}catch(e){}return x};
 })();
+/* ===== v34: alerts: sound, vibration, banner for waiters and kitchen, keep screen awake ===== */
+const ALK='atoll_dev_alert';
+const rxDev=()=>{let o={};try{o=JSON.parse(localStorage.getItem(ALK)||'{}')}catch(e){}return{snd:o.snd!==0,vib:o.vib!==0,awake:o.awake===1}};
+const rxDevSet=(k,v)=>{const d=rxDev();d[k]=!!v;try{localStorage.setItem(ALK,JSON.stringify({snd:d.snd?1:0,vib:d.vib?1:0,awake:d.awake?1:0}))}catch(e){}};
+let RXA=null;
+function rxAudio(){try{if(!RXA)RXA=new(window.AudioContext||window.webkitAudioContext)();if(RXA.state==='suspended')RXA.resume();return RXA}catch(e){return null}}
+['pointerdown','touchstart','keydown'].forEach(ev=>addEventListener(ev,()=>{if(rxOn&&typeof rxOn==='function'&&rxOn())rxAudio()},{passive:true,capture:true}));
+function rxTone(a,f,t0,d,v){const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+t0;o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v||.5,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.05)}
+const RXSND={order:[[880,0,.2],[1175,.22,.35]],kitchen:[[660,0,.18],[880,.2,.18],[1100,.4,.35]],ready:[[784,0,.16],[988,.18,.16],[1319,.36,.4]],changed:[[740,0,.12],[740,.2,.12],[740,.4,.12]],test:[[880,0,.2]]};
+const RXVIB={order:[300,120,300],kitchen:[350,100,350,100,350],ready:[200,80,200,80,200],changed:[120,80,120,80,120],test:[200]};
+function rxBeep(kind){kind=RXSND[kind]?kind:'order';const d=rxDev();
+  if(d.snd){const a=rxAudio();if(a)RXSND[kind].forEach(n=>rxTone(a,n[0],n[1],n[2]))}
+  if(d.vib&&navigator.vibrate){try{navigator.vibrate(RXVIB[kind])}catch(e){}}}
+function rxAlert(kind,msg){rxBeep(kind);if(msg)toast(msg);rxBanner(1)}
+/* wake lock for the kitchen tablet */
+let RXWL=null;
+async function rxWake(){try{const d=rxDev();if(d.awake&&navigator.wakeLock&&!RXWL&&!document.hidden){RXWL=await navigator.wakeLock.request('screen');RXWL.addEventListener('release',()=>{RXWL=null})}else if(!d.awake&&RXWL){await RXWL.release();RXWL=null}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)rxWake()});
+/* what needs attention right now */
+function rxNotes(){const o=[];if(!rxOn()||!me)return o;
+  if(S.menuOn&&RXQ.inc.length&&can('sell'))o.push({k:'qr',cls:'order',h:`<button data-rxinbox>🔔 ${RXQ.inc.length} new QR order${RXQ.inc.length>1?'s':''}</button>`});
+  if(rxKds()){const K=kdsCards();
+    if(can('kitchen')&&!(tab==='biz'&&bz==='kds')){const n=K.filter(x=>x.st==='new').length;if(n)o.push({k:'kit',cls:'kitchen',h:`<button data-rxkds>🍳 ${n} new ticket${n>1?'s':''} for the kitchen</button>`})}
+    if(can('sell')){const n=K.filter(x=>x.st==='ready').length;if(n)o.push({k:'rdy',cls:'ready',h:`<button data-rxready>✅ ${n} ready to serve</button>`})}}
+  return o}
+function rxBanner(flash){let el=document.getElementById('rxnb');const N=(me&&!document.body.classList.contains('cm'))?rxNotes():[];
+  if(!N.length){if(el)el.remove();return}
+  if(!el){el=document.createElement('div');el.id='rxnb';document.body.appendChild(el)}
+  const sig=N.map(x=>x.h).join('');if(el._s!==sig){el.innerHTML=N.map(x=>`<span class='rxnbi ${x.cls}'>${x.h}</span>`).join('');el._s=sig}
+  if(flash){el.classList.remove('fl');void el.offsetWidth;el.classList.add('fl')}}
+const RXN={keys:{},seed:0};
+function rxWatch(){try{if(!rxOn()||!me||!rxKds()){rxBanner();return}
+  const K=kdsCards(),multi=new Set(K.map(x=>x.stn)).size>1,cur={};
+  K.forEach(x=>{cur[x.r.id+'|'+x.stn]={st:x.st,mod:x.r.mod||0,tb:x.c.tb,by:x.r.by,stn:x.stn}});
+  if(RXN.seed)Object.keys(cur).forEach(k=>{const n=cur[k],p=RXN.keys[k],lab=n.tb+(multi?' · '+n.stn:'');
+    if(!p){if(n.st==='new'&&can('kitchen')&&n.by!==me.name)rxAlert('kitchen','New order · '+lab)}
+    else if(p.st!==n.st){if(n.st==='ready'&&can('sell')&&(n.by===me.name||!can('kitchen')))rxAlert('ready','Ready to serve · '+lab)}
+    else if(n.mod!==p.mod&&n.st==='new'&&can('kitchen'))rxAlert('changed','Order changed · '+lab)});
+  RXN.keys=cur;RXN.seed=1;rxBanner();rxWake()}catch(e){}}
+setInterval(rxWatch,2000);
+/* waiters see what is ready and mark it served */
+function rxReady(){const K=kdsCards().filter(x=>x.st==='ready'),multi=new Set(kdsCards().map(x=>x.stn)).size>1;
+  $('#m').innerHTML=`<div class='modal'><div><div class='hd'>Ready to serve</div>${K.map(x=>`<div class='card' style='margin:10px 0'><div style='display:flex;justify-content:space-between'><b>${esc(x.c.tb)}${multi?' · '+esc(x.stn):''}</b><small class='sub'>${Math.max(0,Math.round((Date.now()-(Math.max(0,...x.its.map(i=>i.rd||0))||x.r.at))/60000))} min waiting</small></div>${x.its.filter(i=>!i.v).map(i=>`<div class='row' style='font-size:14px'><span>${i.q} × ${esc(i.name)}</span></div>`).join('')}<button class='go' style='margin-top:8px' data-rxsrv='${esc(x.c.tb)}|${x.r.id}|${esc(x.stn)}'>Served</button></div>`).join('')||`<p class='sub'>Nothing is waiting.</p>`}</div></div>`}
+/* alerts settings for this device */
+function rxAlSet(){const d=rxDev();$('#m').innerHTML=`<div class='modal'><div><div class='hd'>Alerts on this device</div><p class='sub' style='margin:0 0 6px'>These are saved on this tablet or phone only, so the kitchen and the waiters can each choose.</p>
+  <label class='chk'><input type='checkbox' data-rxal='snd' ${d.snd?'checked':''}>Play a sound for new orders</label>
+  <label class='chk'><input type='checkbox' data-rxal='vib' ${d.vib?'checked':''}>Vibrate for new orders${navigator.vibrate?'':' (not supported on this device)'}</label>
+  <label class='chk'><input type='checkbox' data-rxal='awake' ${d.awake?'checked':''}>Keep the screen on${navigator.wakeLock?'':' (not supported on this device)'}</label>
+  <p class='sub' style='margin:8px 0 0'>Alerts work while Atoll POS is open on the screen. The kitchen tablet should stay on the Atoll POS page with the screen on.</p>
+  <button class='go' style='margin-top:12px' data-rxaltest>Test sound and vibration</button></div></div>`}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-rxready],[data-rxsrv],[data-rxalset],[data-rxaltest]');if(!t)return;const d=t.dataset;
+  if('rxready' in d){e.stopImmediatePropagation();rxReady();return}
+  if(d.rxsrv){e.stopImmediatePropagation();const[tb,id,stn]=d.rxsrv.split('|');rxRoundSet(tb,id,'done',false,stn);rxReady();rxBanner();return}
+  if('rxalset' in d){e.stopImmediatePropagation();rxAlSet();return}
+  if('rxaltest' in d){e.stopImmediatePropagation();rxAudio();rxBeep('order');toast('Sound and vibration test sent.')}},true);
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.rxal){rxDevSet(t.dataset.rxal,t.checked);if(t.dataset.rxal==='awake')rxWake();if(t.checked&&t.dataset.rxal!=='awake'){rxAudio();rxBeep('test')}}},true);
+/* entry points: a bell on the table toolbar and on the Kitchen page, and a card in Settings */
+(function(){const _ci=uCartInner;uCartInner=function(){let h=_ci.apply(this,arguments);if(rxOn())h=h.replace("<button class='rxch' data-rxsplit>Split</button>","<button class='rxch' data-rxsplit>Split</button><button class='rxch' data-rxalset aria-label='Alerts on this device'>🔔</button>");return h};
+  const _bk=bKds;bKds=function(){const r=_bk.apply(this,arguments);try{const h=document.querySelector('#app .card>.hd');if(h&&!h.querySelector('[data-rxalset]'))h.insertAdjacentHTML('beforeend',`<button class='rxch' data-rxalset style='margin-left:8px'>🔔 Alerts</button>`)}catch(e){}return r};
+  const _s=setts;setts=function(){_s.apply(this,arguments);try{const k=document.getElementById('kdsset');if(k&&!k.querySelector('[data-rxalset]'))k.insertAdjacentHTML('beforeend',`<button class='ghost' style='margin-top:12px' data-rxalset>🔔 Sound, vibration and keep-awake on this device</button>`)}catch(e){}}})();
+/* ===== v35: push notifications (work when the app is closed) ===== */
+const RXP={ep:'',synced:0,last:{}};
+const rxPushKey=()=>(window.ATOLL_CONFIG&&window.ATOLL_CONFIG.vapidPublicKey)||'';
+const rxPushOk=()=>!!(rxPushKey()&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window&&typeof CLOUD!=='undefined'&&CLOUD);
+const rxB64=s=>{const p='='.repeat((4-s.length%4)%4),b=(s+p).replace(/-/g,'+').replace(/_/g,'/'),r=atob(b),o=new Uint8Array(r.length);for(let i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o};
+const rxTopics=()=>{const t=[];if(can('sell'))t.push('qr','ready');if(can('kitchen'))t.push('kitchen');return t};
+const rxPushWanted=()=>{try{return localStorage.getItem('atoll_push')==='1'}catch(e){return false}};
+async function rxPushSub(create){const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
+  if(!sub&&create)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:rxB64(rxPushKey())});return sub}
+async function rxPushRegister(sub){const j=sub.toJSON();RXP.ep=j.endpoint;
+  const r=await sbc.rpc('push_register',{p_shop:cl.shop,p_kind:'web',p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_topics:rxTopics(),p_label:(navigator.userAgentData&&navigator.userAgentData.platform||navigator.platform||'')+' · '+(me?me.name:'')});
+  if(r.error)throw r.error}
+async function rxPushEnable(){try{
+  if(!rxPushOk()){toast('Notifications are not set up yet.',1);return false}
+  const perm=await Notification.requestPermission();if(perm!=='granted'){toast('Notifications are blocked. Allow them in the browser settings for this site.',1);return false}
+  const sub=await rxPushSub(true);await rxPushRegister(sub);try{localStorage.setItem('atoll_push','1')}catch(e){}RXP.synced=1;toast('Notifications are on for this device.');return true}
+  catch(e){toast('Could not turn on notifications. '+(e&&e.message?e.message:''),1);return false}}
+async function rxPushDisable(){try{const sub=await rxPushSub(false);if(sub){try{await sbc.rpc('push_unregister',{p_endpoint:sub.endpoint})}catch(e){}await sub.unsubscribe()}}catch(e){}try{localStorage.removeItem('atoll_push')}catch(e){}RXP.ep='';toast('Notifications are off for this device.')}
+/* keep this device's shop, user and topics up to date after sign-in */
+async function rxPushSync(){if(RXP.synced||!rxPushWanted()||!rxPushOk()||!me||typeof cl==='undefined'||!cl.shop||Notification.permission!=='granted')return;RXP.synced=1;
+  try{const sub=await rxPushSub(true);await rxPushRegister(sub)}catch(e){RXP.synced=0}}
+setInterval(()=>{try{rxPushSync()}catch(e){}},5000);
+/* ask the server to push to the other devices (the one that caused the event is skipped) */
+async function rxPushSend(topic,title,body,uid,ref){try{if(!rxPushOk()||!rxShared())return;const k=topic+'|'+title+'|'+(ref||'');if(RXP.last[k]&&Date.now()-RXP.last[k]<4000)return;RXP.last[k]=Date.now();
+  const ss=await sbc.auth.getSession(),tk=ss&&ss.data&&ss.data.session?ss.data.session.access_token:'';
+  const r=await sbc.functions.invoke('push-notify',{body:{token:tk,shop:cl.shop,topic,title,body,uid:uid||'',skip:RXP.ep||'',ref:ref||''}});return r&&r.data}catch(e){}}
+const rxSummary=its=>its.filter(i=>!i.v).slice(0,4).map(i=>i.q+' × '+i.name).join(', ')+(its.length>4?' …':'');
+/* hooks: a new or changed kitchen ticket, and food that is ready */
+(function(){const _s=rxSendC;rxSendC=function(c,quiet){const before=(c.rounds||[]).find(x=>x.st==='new'),merged=!!before,r=_s.apply(this,arguments);
+    if(r){const n=r.items.length;rxPushSend('kitchen',(merged?'Order changed · ':'New order · ')+c.tb,rxSummary(r.items),'',r.id+(merged?':'+(r.mod||''):''))}return r};
+  const _rs=rxRoundSet;rxRoundSet=function(tb,id,st,force,stn){const c=carts.find(x=>x.tb===tb),r=c&&(c.rounds||[]).find(x=>x.id===id),was=r?JSON.stringify(r.items.map(i=>i.s)):'';const x=_rs.apply(this,arguments);
+    if(st==='ready'&&r&&JSON.stringify(r.items.map(i=>i.s))!==was){const its=r.items.filter(i=>!i.v&&(stn===undefined||(i.stn||'Kitchen')===stn));rxPushSend('ready','Ready to serve · '+tb+(stn&&stn!=='Kitchen'?' · '+stn:''),rxSummary(its),r.uid||'',r.id+':'+(stn||''))}return x}})();
+/* settings in the alerts window */
+(function(){const _a=rxAlSet;rxAlSet=function(){_a.apply(this,arguments);try{const m=document.querySelector('#m .modal>div');if(!m)return;const ok=rxPushOk(),on=rxPushWanted()&&typeof Notification!=='undefined'&&Notification.permission==='granted';
+  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  m.insertAdjacentHTML('beforeend',`<div style='margin-top:16px;border-top:1px solid var(--ln);padding-top:12px'><div class='hd' style='font-size:16px'>Notifications when the app is closed</div>${ok?`<p class='sub' style='margin:6px 0 10px'>${on?'On for this device. It rings even when Atoll POS is closed or the screen is off.':'Get a notification on this device for new QR orders, kitchen tickets and food that is ready, even when Atoll POS is closed.'}</p><div style='display:flex;gap:8px;flex-wrap:wrap'>${on?`<button class='ghost' data-rxpoff>Turn off</button><button class='ghost' data-rxptest>Send a test</button>`:`<button class='go' style='margin:0' data-rxpon>Turn on notifications</button>`}</div>${ios?`<p class='sub' style='margin:8px 0 0'>On iPhone and iPad: first tap Share, then <b>Add to Home Screen</b>, and open Atoll POS from the new icon. Then turn notifications on.</p>`:''}`:`<p class='sub' style='margin:6px 0 0'>Not set up on the server yet. The account owner can switch this on (see PUSH-SETUP).</p>`}</div>`)}catch(e){}}})();
+document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-rxpon],[data-rxpoff],[data-rxptest]');if(!t)return;const d=t.dataset;e.stopImmediatePropagation();
+  if('rxpon' in d){if(await rxPushEnable())rxAlSet()}
+  else if('rxpoff' in d){await rxPushDisable();rxAlSet()}
+  else if('rxptest' in d){const r=await rxPushSend('test','Atoll POS test','Notifications are working on this device.','','t'+Date.now());toast(r&&r.sent?'Test sent. Switch to another app to see it.':'Could not send the test.'+(r&&r.error?' '+r.error:''),!(r&&r.sent))}},true);
+/* ---------- card / online payments: BML Connect and MIB ---------- */
+const GW={info:null,at:0,cur:null,pend:[],timer:0};
+const gwOk=()=>!!(typeof CLOUD!=='undefined'&&CLOUD&&typeof sbc!=='undefined'&&sbc&&typeof me!=='undefined'&&me&&typeof cl!=='undefined'&&cl.shop);
+const gwNames={bml:'BML Connect',mib:'MIB'};
+const gwList=()=>{const i=GW.info||{},a=[];if(i.bml)a.push('BML Connect');if(i.mib)a.push('MIB');return a};
+async function gwLoad(force){if(!gwOk())return false;if(!force&&GW.info&&Date.now()-GW.at<60000)return false;GW.at=Date.now();
+  try{const r=await sbc.rpc('gateway_info',{p_shop:cl.shop});if(r&&r.data){const was=gwList().join();GW.info=r.data;return was!==gwList().join()}}catch(e){}return false}
+async function gwCall(body){try{const ss=await sbc.auth.getSession(),tk=ss&&ss.data&&ss.data.session?ss.data.session.access_token:'';
+  const r=await sbc.functions.invoke('pay-gateway',{body:{...body,token:tk,shop:cl.shop,origin:location.origin}});
+  if(r&&r.error){let m='';try{const j=await r.error.context.json();m=j.error}catch(e){}return{error:m||'Could not reach the payment service. Check that it is set up (see PAYMENTS-SETUP).'}}
+  return r&&r.data||{error:'No answer from the payment service'}}catch(e){return{error:'Could not reach the payment service'}}}
+
+/* payment methods: the gateways that are switched on appear next to Cash, Card and Bank transfer */
+(function(){const _p=sPay;sPay=function(){_p.apply(this,arguments);try{const g=gwList(),mg=document.querySelector('#app .mg');
+  if(mg&&g.length&&!mg.querySelector('[data-gwm]'))g.forEach(n=>mg.insertAdjacentHTML('beforeend',`<button class='mt' data-v3pm='${n}' data-gwm><span class='ki'>${ic('card')}</span>${n}</button>`));
+  gwLoad().then(ch=>{if(ch&&usv==='pay')sPay()})}catch(e){}}})();
+/* receiving: a gateway payment has to be confirmed by the bank before it counts */
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-v3recv]');if(!t||(upm!=='BML Connect'&&upm!=='MIB')||!gwOk())return;
+  e.stopImmediatePropagation();e.preventDefault();const rem=uRem(),a=+unpv||0;if(a<=0)return;const ap=Math.min(a,rem),prov=upm==='MIB'?'mib':'bml',nm=upm;
+  gwCharge(ap,prov,(id)=>{pmts.push({m:nm,a:ap,ref:unref||(prov.toUpperCase()+' '+String(id).slice(0,8))});GW.pend.push({p:prov,id,a:ap});unpv='';unref='';if(uRem()<=0.005)uCompleteSale(0);else{usv='pay';render()}})},true);
+(function(){const _c=uCompleteSale;uCompleteSale=function(){const keep=GW.pend;const n=S.inv.length;const r=_c.apply(this,arguments);
+  if(S.inv.length>n){GW.pend=[];if(keep.length&&S.inv[0]){S.inv[0].gw=keep;save()}}return r}})();
+
+function gwModal(st,msg){const c=GW.cur||{},nm=gwNames[c.prov]||'',amt=c.amt?m(c.amt):'';const mo=$('#m');
+  const x=`<button class='ghost' data-gwx>${st==='wait'?'Cancel payment':'Close'}</button>`;
+  let body='';
+  if(st==='start')body=`<div class='hd'>Starting payment…</div><p class='sub'>Contacting the bank.</p>`;
+  else if(st==='err')body=`<div class='hd'>Payment not started</div><p class='sub'>${esc(msg||'Something went wrong.')}</p><div style='display:flex;gap:8px;margin-top:10px'>${x}</div>`;
+  else if(st==='bad')body=`<div class='hd'>Payment did not go through</div><p class='sub'>${esc(msg||'The bank did not confirm it.')} Nothing was recorded. You can try again or choose another way to pay.</p><div style='display:flex;gap:8px;margin-top:10px'><button class='go' style='margin:0' data-gwretry>Try again</button>${x}</div>`;
+  else if(c.prov==='bml')body=`<div class='hd'>${nm} · ${amt}</div><p class='sub' style='margin:4px 0 10px'>Ask the customer to scan this with their phone and pay. This screen finishes the sale by itself once the bank confirms.</p><div style='text-align:center'>${c.url&&window.__QR?qrSvg(c.url,220):''}</div><div style='display:flex;gap:8px;margin-top:12px;flex-wrap:wrap'><button class='ghost' data-gwopen>Open payment page</button>${x}</div><p class='sub' id='gwst' style='margin:10px 0 0'>Waiting for payment…</p>`;
+  else body=`<div class='hd'>${nm} · ${amt}</div><p class='sub' style='margin:4px 0 10px'>Open the secure MIB page on this device, or on the customer's phone, and pay by card. This screen finishes the sale by itself once the bank confirms.</p><div style='display:flex;gap:8px;flex-wrap:wrap'><button class='go' style='margin:0' data-gwopen>Open MIB payment page</button>${x}</div><p class='sub' id='gwst' style='margin:10px 0 0'>Waiting for payment…</p>`;
+  mo.innerHTML=`<div class='modal'><div>${body}</div></div>`}
+async function gwCharge(amt,prov,onOk){
+  GW.cur={prov,amt,onOk};gwModal('start');
+  const r=await gwCall({action:'create',provider:prov,amount:amt,ref:(S.shop||'POS')+' · '+(me.name||'')});
+  if(!r||r.error||!r.id){gwModal('err',r&&r.error);return}
+  GW.cur={prov,amt,onOk,id:r.id,url:r.url,form:r.form,t0:Date.now()};gwModal('wait');clearInterval(GW.timer);GW.timer=setInterval(gwPoll,3000);setTimeout(gwPoll,1200)}
+async function gwPoll(){const c=GW.cur;if(!c||!c.id||c.busy)return;if(Date.now()-c.t0>20*60000){clearInterval(GW.timer);gwModal('bad','The payment page timed out.');return}
+  c.busy=1;let r;try{r=await gwCall({action:'status',id:c.id})}finally{c.busy=0}
+  if(!GW.cur||GW.cur.id!==c.id||!r||r.error)return;
+  if(r.state==='CONFIRMED'){clearInterval(GW.timer);GW.cur=null;$('#m').innerHTML='';toast(gwNames[c.prov]+' payment received');if(c.onOk)c.onOk(c.id)}
+  else if(r.state&&r.state!=='PENDING'){clearInterval(GW.timer);gwModal('bad',r.state==='CANCELLED'?'The customer cancelled.':r.state==='EXPIRED'?'The payment link expired.':r.detail||'The bank declined it.')}}
+function gwOpenMib(){const c=GW.cur;if(!c||!c.form)return;const w=window.open('','_blank');const h=`<!doctype html><meta charset=utf-8><body onload="document.f.submit()"><p style="font:18px system-ui;padding:30px">Opening the bank…</p><form name=f method=post action="${esc(c.form.action)}">${Object.entries(c.form.fields).map(([k,v])=>`<input type=hidden name="${esc(k)}" value="${esc(String(v))}">`).join('')}</form>`;
+  if(w){w.document.write(h);w.document.close()}else toast('Allow pop-ups to open the bank page.',true)}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-gwx],[data-gwopen],[data-gwretry]');if(!t)return;e.stopImmediatePropagation();const d=t.dataset;
+  if('gwx' in d){clearInterval(GW.timer);GW.cur=null;$('#m').innerHTML=''}
+  else if('gwretry' in d){const c=GW.cur;clearInterval(GW.timer);if(c)gwCharge(c.amt,c.prov,c.onOk)}
+  else if('gwopen' in d){const c=GW.cur;if(!c)return;if(c.prov==='mib')gwOpenMib();else if(c.url)window.open(c.url,'_blank')}},true);
+
+/* owner settings */
+function gwSetCard(){const i=GW.info||{},own=me.role==='owner';
+  if(!i.allowed)return `<div id='gwset' class='card'><div class='hd'>Card and online payments<span class='tag d'>Coming soon</span></div><p class='sub' style='margin:2px 0 8px'>Take card and bank-app payments at the till through BML Connect and MIB. This is coming soon.</p><div class='item'><div style='flex:1'><b>BML Connect</b><small style='display:block'>Coming soon</small></div></div><div class='item'><div style='flex:1'><b>MIB</b><small style='display:block'>Coming soon</small></div></div></div>`;
+  const row=(k,n,on,saved,sub)=>`<div class='item'><div style='flex:1'><b>${n}</b> <span class='tag ${on?'':'d'}'>${on?'On':saved?'Off':'Not set up'}</span><small style='display:block'>${sub}</small></div>${own?`<button class='ghost' data-gwset='${k}'>${saved?'Edit':'Set up'}</button>`:''}</div>`;
+  return `<div id='gwset' class='card'><div class='hd'>Card and online payments</div><p class='sub' style='margin:2px 0 8px'>Take card and bank-app payments at the till through BML Connect or MIB. Money goes straight to your own bank account. Once switched on, "BML Connect" and "MIB" appear when you take payment.${own?'':' Only the owner can change this.'}</p>
+  ${row('bml','BML Connect',i.bml,i.bmlSaved,i.bmlSaved?(i.bmlEnv==='live'?'Live':'Sandbox (test)'):'QR / link payments from Bank of Maldives')}
+  ${row('mib','MIB',i.mib,i.mibSaved,i.mibSaved?'Merchant '+esc(i.mibMer||''):'Card payments through Maldives Islamic Bank')}</div>`}
+(function(){const _s=setts;setts=function(){_s.apply(this,arguments);try{if(sm!=='shop'||!gwOk()||document.getElementById('gwset'))return;const c=document.getElementById('btcard');if(!c)return;
+  c.insertAdjacentHTML('afterend',gwSetCard());gwLoad(true).then(()=>{const o=document.getElementById('gwset');if(o){o.outerHTML=gwSetCard()}})}catch(e){}}})();
+function gwForm(k){const i=GW.info||{};
+  if(k==='bml')return `<div class='modal'><div><div class='hd'>BML Connect</div><p class='sub'>Get your API key from the BML Connect merchant portal (it starts with <b>sk_</b>). Use Sandbox to test first.</p>
+   <label>API key (secret)</label><input id='gwkey' type='password' autocomplete='off' placeholder='${i.bmlSaved?'Saved. Leave empty to keep it':'sk_...'}'>
+   <label>Mode</label><select id='gwenv'><option value='sandbox' ${i.bmlEnv!=='live'?'selected':''}>Sandbox (test, no real money)</option><option value='live' ${i.bmlEnv==='live'?'selected':''}>Live</option></select>
+   <label class='chk' style='margin-top:12px'><input type='checkbox' id='gwon' ${i.bml||!i.bmlSaved?'checked':''}>Offer BML Connect at the till</label>
+   <div style='display:flex;gap:8px;margin-top:12px;flex-wrap:wrap'><button class='go' style='margin:0' data-gwsave='bml'>Save</button>${i.bmlSaved?`<button class='ghost danger' data-gwclear='bml'>Remove key</button>`:''}<button class='ghost' data-gwx>Cancel</button></div></div></div>`;
+  return `<div class='modal'><div><div class='hd'>MIB</div><p class='sub'>Enter the details MIB gave you when your merchant account was opened. The payment page address is on the same sheet.</p>
+   <label>Payment page address</label><input id='gwhost' inputmode='url' autocomplete='off' value='${esc(i.mibHost||'')}' placeholder='https://...'>
+   <div class='g2'><div><label>Merchant ID</label><input id='gwmer' autocomplete='off' value='${esc(i.mibMer||'')}'></div><div><label>Acquirer ID</label><input id='gwacq' autocomplete='off' value='${esc(i.mibAcq||'')}'></div></div>
+   <label>Password (secret)</label><input id='gwpass' type='password' autocomplete='off' placeholder='${i.mibSaved?'Saved. Leave empty to keep it':''}'>
+   <label>Version</label><input id='gwver' inputmode='numeric' value='${esc(i.mibVer||'1')}'>
+   <label class='chk' style='margin-top:12px'><input type='checkbox' id='gwon' ${i.mib||!i.mibSaved?'checked':''}>Offer MIB at the till</label>
+   <p class='sub' style='margin:6px 0 0'>Ask MIB to allow this result address: <b style='word-break:break-all'>${esc((CFG.supabaseUrl||'')+'/functions/v1/pay-gateway?cb=mib')}</b></p>
+   <div style='display:flex;gap:8px;margin-top:12px;flex-wrap:wrap'><button class='go' style='margin:0' data-gwsave='mib'>Save</button>${i.mibSaved?`<button class='ghost danger' data-gwclear='mib'>Remove details</button>`:''}<button class='ghost' data-gwx>Cancel</button></div></div></div>`}
+document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-gwset],[data-gwsave],[data-gwclear]');if(!t)return;e.stopImmediatePropagation();const d=t.dataset;
+  if(d.gwset){await gwLoad(true);$('#m').innerHTML=gwForm(d.gwset)}
+  else if(d.gwsave){const k=d.gwsave,v=id=>((document.getElementById(id)||{}).value||'').trim();
+    const cfg=k==='bml'?{key:v('gwkey'),env:v('gwenv'),on:document.getElementById('gwon').checked}:{host:v('gwhost'),mer:v('gwmer'),acq:v('gwacq'),pass:v('gwpass'),ver:v('gwver'),on:document.getElementById('gwon').checked};
+    if(k==='bml'&&cfg.key&&!/^sk_/.test(cfg.key)){toast('A BML Connect key starts with sk_',true);return}
+    if(k==='mib'&&cfg.on&&(!/^https:\/\//i.test(cfg.host)||!cfg.mer||!cfg.acq)){toast('Fill in the payment page address (https://), Merchant ID and Acquirer ID.',true);return}
+    const r=await sbc.rpc('gateway_save',{p_shop:cl.shop,p_provider:k,p_cfg:cfg});if(r&&r.error){toast(r.error.message||'Could not save',true);return}
+    $('#m').innerHTML='';await gwLoad(true);toast(gwNames[k]+' saved');setts()}
+  else if(d.gwclear){if(!confirm('Remove the saved '+gwNames[d.gwclear]+' details?'))return;await sbc.rpc('gateway_clear',{p_shop:cl.shop,p_provider:d.gwclear});$('#m').innerHTML='';await gwLoad(true);setts()}},true);
+
+/* platform admin: allow card payments for a shop */
+(function(){const _a=adminShop;adminShop=async function(id){const r=await _a.apply(this,arguments);try{const g=await sbc.rpc('admin_gateway_get',{p_shop:id});const on=!!(g&&g.data);const c=document.querySelector('[data-cl-snote]');const card=c&&c.closest('.card');
+  if(card&&!document.getElementById('gwadm'))card.insertAdjacentHTML('beforebegin',`<div class='card' id='gwadm'><div class='hd'>Card payments (BML Connect, MIB)<span class='tag ${on?'':'d'}'>${on?'Allowed':'Coming soon'}</span></div><p class='sub' style='margin:0 0 8px'>${on?'This shop owner can set up and use BML Connect and MIB.':'The owner sees "Coming soon". Allow it only after you have agreed it with the shop.'}</p><button class='${on?'ghost danger':'go'}' style='${on?'width:100%':'margin:0;width:100%'}' data-gwallow='${id}' data-gwto='${on?0:1}'>${on?'Stop card payments for this shop':'Allow card payments for this shop'}</button></div>`)}catch(e){}return r}})();
+document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-gwallow]');if(!t)return;e.stopImmediatePropagation();const id=t.dataset.gwallow,to=t.dataset.gwto==='1';
+  const r=await sbc.rpc('admin_gateway_allow',{p_shop:id,p_on:to});if(r&&r.error){toast(r.error.message||'Could not change',true);return}toast(to?'Card payments allowed':'Card payments stopped');adminShop(id)},true);
+
 
 if(new URLSearchParams(location.search).has('menu'))cmBoot();else if(CLOUD)cloudBoot();else render();
 </script>
